@@ -13,7 +13,8 @@
 # │   └── Controller (Node)        <- player_controller.gd
 # ├── EnemyWarlord (warlord.tscn)  <- Team = 1; NOT in a commander slot
 # │   └── AIController (Node)      <- ai_controller.gd
-# └── Village (village.tscn)       <- any number of village instances
+# ├── Village (village.tscn)       <- any number of village instances
+# └── Burh (burh.tscn)             <- fortifications at choke points
 #
 # Only player warlords go in the four commander slots below. Enemy warlords
 # are plain warlord.tscn instances with an AIController child and their
