@@ -8,14 +8,22 @@
 #
 # ACTIVATION (see warlord_commander.gd): hold the X button and press
 # d-pad Up / Left / Right to fire the matching slot on the SELECTED
-# warlord. The effect lasts `duration` seconds and applies to the warlord
-# and its whole retinue; the slot then recharges for `cooldown` seconds.
+# warlord. The slot then recharges for `cooldown` seconds.
 #
-# IMPLEMENTED EFFECTS (more added as we build them):
-#   CHARGE    — move speed of warlord + retinue multiplied by `magnitude`
-#               (e.g. 1.5 = 50% faster) for the duration.
-#   STEADFAST — damage taken by warlord + retinue multiplied by `magnitude`
-#               (e.g. 0.5 = half damage) for the duration.
+# IMPLEMENTED EFFECTS (more added as we build them) — what each field
+# means per effect:
+#
+#   CHARGE        sustained: move speed of warlord + retinue multiplied by
+#                 `magnitude` (1.5 = +50%) for `duration` seconds.
+#   STEADFAST     sustained: damage taken by warlord + retinue multiplied
+#                 by `magnitude` (0.5 = half) for `duration` seconds.
+#   KNOCK_BACK    instant: every enemy unit within `radius` px of the
+#                 warlord is shoved `magnitude` px away and stunned for
+#                 `duration` seconds (stunned = no moving, no attacking).
+#   WARLORD_LEADS sustained: for `duration` seconds the warlord leads from
+#                 the front — enemies CAN target the warlord even while
+#                 the retinue lives — and on activation every retinue
+#                 recruit is healed by `magnitude` HP (up to max health).
 # =============================================================================
 
 extends Resource
@@ -24,12 +32,16 @@ class_name Ability
 enum Effect {
 	CHARGE,
 	STEADFAST,
+	KNOCK_BACK,
+	WARLORD_LEADS,
 }
 
 @export var display_name: String = "Ability"
 @export var effect: Effect = Effect.CHARGE
 @export var cooldown: float = 20.0  # seconds before the slot can fire again
-@export var duration: float = 5.0   # seconds the effect stays active
-# CHARGE: speed multiplier (1.5 = +50% speed).
-# STEADFAST: damage-taken multiplier (0.5 = half damage).
+@export var duration: float = 5.0   # effect time (KNOCK_BACK: stun time)
+# CHARGE: speed multiplier. STEADFAST: damage-taken multiplier.
+# KNOCK_BACK: push distance in px. WARLORD_LEADS: HP healed per recruit.
 @export var magnitude: float = 1.0
+# KNOCK_BACK only: enemies within this many px of the warlord are hit.
+@export var radius: float = 120.0

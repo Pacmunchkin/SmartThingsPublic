@@ -107,13 +107,24 @@ func add_recruit(recruit: Recruit) -> void:
 	if recruit.get_parent() != _retinue:
 		recruit.reparent.call_deferred(_retinue)
 
-# Untouchable while the retinue lives; fair game once it is defeated.
+# Untouchable while the retinue lives — unless leading from the front
+# (Warlord Leads active). Fair game once the retinue is defeated.
 func can_be_targeted() -> bool:
-	return army_size <= 0
+	if army_size <= 0:
+		return true
+	for effect in _active_effects:
+		var ability: Ability = effect.ability
+		if ability.effect == Ability.Effect.WARLORD_LEADS:
+			return true
+	return false
 
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
 	_update_abilities(delta)
+	stun_timer = maxf(stun_timer - delta, 0.0)
+	if is_stunned():
+		velocity = Vector2.ZERO
+		return
 	_auto_attack()
 	var direction := Vector2.ZERO
 	if _controller != null:
@@ -129,7 +140,35 @@ func activate_ability(slot: int) -> void:
 	if ability == null or _ability_cooldowns[slot] > 0.0:
 		return
 	_ability_cooldowns[slot] = ability.cooldown
-	_active_effects.append({"ability": ability, "time_left": ability.duration})
+	match ability.effect:
+		Ability.Effect.KNOCK_BACK:
+			_do_knock_back(ability)  # instant, nothing sustained
+		Ability.Effect.WARLORD_LEADS:
+			_heal_retinue(ability.magnitude)
+			_active_effects.append({"ability": ability, "time_left": ability.duration})
+		_:
+			_active_effects.append({"ability": ability, "time_left": ability.duration})
+
+# Shove every enemy unit within radius away from the warlord and stun it.
+func _do_knock_back(ability: Ability) -> void:
+	for node in get_tree().get_nodes_in_group("combatants"):
+		var other := node as Combatant
+		if other == null or other == self or other.team == team:
+			continue
+		if other.is_structure():
+			continue
+		var offset: Vector2 = other.global_position - global_position
+		if offset.length() > ability.radius:
+			continue
+		var push := offset.normalized() if offset.length() > 0.0 else Vector2.RIGHT
+		other.move_and_collide(push * ability.magnitude)
+		other.stun(ability.duration)
+
+# Warlord Leads: an immediate rally — heal each retinue recruit.
+func _heal_retinue(amount: float) -> void:
+	for child in _retinue.get_children():
+		if child is Recruit:
+			child.health = minf(child.health + amount, child.max_health)
 
 func _get_ability(slot: int) -> Ability:
 	match slot:

@@ -87,6 +87,10 @@ func set_follow_target(target: Node2D) -> void:
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
 	_ranged_timer = maxf(_ranged_timer - delta, 0.0)
+	stun_timer = maxf(stun_timer - delta, 0.0)
+	if is_stunned():
+		velocity = Vector2.ZERO
+		return
 	_update_combat_target()
 	if _combat_target != null:
 		velocity = _fight(_combat_target)

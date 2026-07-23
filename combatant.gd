@@ -30,6 +30,16 @@ var engaged_count: int = 0  # enemies currently targeting me (for pairing)
 var damage_taken_multiplier: float = 1.0
 var speed_multiplier: float = 1.0
 
+# Stun (e.g. from Knock Back): a stunned combatant cannot move or attack.
+# Subclasses tick stun_timer down in _physics_process and early-out.
+var stun_timer: float = 0.0
+
+func stun(duration: float) -> void:
+	stun_timer = maxf(stun_timer, duration)
+
+func is_stunned() -> bool:
+	return stun_timer > 0.0
+
 func _ready() -> void:
 	add_to_group("combatants")
 
