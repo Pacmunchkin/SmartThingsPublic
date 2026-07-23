@@ -20,6 +20,11 @@
 extends CharacterBody2D
 class_name Warlord
 
+# --- Team -------------------------------------------------------------------
+# Passed down to every recruit in the retinue. Recruits only fight recruits
+# on a different team. Player warlords are team 0; enemy villages default 1.
+@export var team: int = 0
+
 # --- Movement ---------------------------------------------------------------
 @export var move_speed: float = 200.0  # pixels per second
 
@@ -28,7 +33,7 @@ class_name Warlord
 var is_selected: bool = false
 
 # --- Retinue / army ---------------------------------------------------------
-# +1 per recruit in the Retinue node at scene start.
+# +1 per recruit in the Retinue node at scene start, -1 when one dies.
 var army_size: int = 0
 
 @onready var _retinue: Node2D = $Retinue
@@ -36,8 +41,13 @@ var army_size: int = 0
 func _ready() -> void:
 	for child in _retinue.get_children():
 		if child is Recruit:
+			child.team = team
 			child.set_follow_target(self)
+			child.died.connect(_on_recruit_died)
 			army_size += 1
+
+func _on_recruit_died(_recruit: Recruit) -> void:
+	army_size -= 1
 
 func _physics_process(_delta: float) -> void:
 	if not is_selected:
