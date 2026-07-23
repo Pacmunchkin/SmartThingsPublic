@@ -33,6 +33,16 @@ func _ready() -> void:
 func can_be_targeted() -> bool:
 	return true
 
+# Structures (e.g. CityGate) don't move or fight back; attackers prefer
+# living enemies over them and are never locked onto them.
+func is_structure() -> bool:
+	return false
+
+# Extra reach when meleeing this target: wide structures return ~half their
+# width so attackers hit their edge instead of walking to their center.
+func target_radius() -> float:
+	return 0.0
+
 func take_damage(amount: float) -> void:
 	health -= amount
 	if health <= 0.0:

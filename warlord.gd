@@ -104,21 +104,31 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 # Swing at the nearest targetable enemy in reach, on cooldown.
+# Living enemies outrank structures (e.g. a city gate).
 func _auto_attack() -> void:
 	if _attack_timer > 0.0:
 		return
-	var target: Combatant = null
-	var best_dist: float = attack_range
+	var best_unit: Combatant = null
+	var best_unit_dist: float = attack_range
+	var best_structure: Combatant = null
+	var best_structure_dist: float = attack_range
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var other := node as Combatant
 		if other == null or other == self or other.team == team:
 			continue
 		if not other.can_be_targeted():
 			continue
-		var dist := global_position.distance_to(other.global_position)
-		if dist <= best_dist:
-			best_dist = dist
-			target = other
+		# Reach is measured to the target's edge (see target_radius).
+		var dist := global_position.distance_to(other.global_position) \
+				- other.target_radius()
+		if other.is_structure():
+			if dist <= best_structure_dist:
+				best_structure_dist = dist
+				best_structure = other
+		elif dist <= best_unit_dist:
+			best_unit_dist = dist
+			best_unit = other
+	var target := best_unit if best_unit != null else best_structure
 	if target != null:
 		_attack_timer = attack_interval
 		target.take_damage(attack_damage)

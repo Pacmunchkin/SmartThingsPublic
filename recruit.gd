@@ -77,22 +77,68 @@ func _physics_process(delta: float) -> void:
 func _update_combat_target() -> void:
 	if _combat_target != null and not is_instance_valid(_combat_target):
 		_combat_target = null
-	if _combat_target != null:
+	# Structure attacks are not sticky: break off the moment the anchor
+	# (my warlord, or my post) is left behind — the player pulling their
+	# warlord away pulls the retinue off the gate.
+	if _combat_target != null and _combat_target.is_structure():
+		if _anchor_position().distance_to(global_position) > aggro_range:
+			_release_combat_target()
+	# Duels with living enemies stay committed until one side dies.
+	if _combat_target != null and not _combat_target.is_structure():
 		return
+	# Living enemies always outrank structures.
+	var best_unit := _best_unit_target()
+	if best_unit != null:
+		_release_combat_target()
+		_combat_target = best_unit
+		best_unit.engaged_count += 1
+		return
+	if _combat_target != null:
+		return  # keep hammering the structure
+	var structure := _nearest_structure_target()
+	if structure != null:
+		_combat_target = structure
+		structure.engaged_count += 1
+
+func _best_unit_target() -> Combatant:
 	var best: Combatant = null
 	for node in get_tree().get_nodes_in_group("combatants"):
 		var other := node as Combatant
 		if other == null or other == self or other.team == team:
 			continue
-		if not other.can_be_targeted():
+		if other.is_structure() or not other.can_be_targeted():
 			continue
 		if global_position.distance_to(other.global_position) > aggro_range:
 			continue
 		if best == null or _is_better_target(other, best):
 			best = other
-	if best != null:
-		_combat_target = best
-		best.engaged_count += 1
+	return best
+
+func _nearest_structure_target() -> Combatant:
+	var best: Combatant = null
+	var best_dist: float = aggro_range
+	for node in get_tree().get_nodes_in_group("combatants"):
+		var other := node as Combatant
+		if other == null or other.team == team:
+			continue
+		if not other.is_structure() or not other.can_be_targeted():
+			continue
+		var dist := global_position.distance_to(other.global_position)
+		if dist <= best_dist:
+			best_dist = dist
+			best = other
+	return best
+
+func _release_combat_target() -> void:
+	if _combat_target != null and is_instance_valid(_combat_target):
+		_combat_target.engaged_count -= 1
+	_combat_target = null
+
+# Where this recruit "belongs": its warlord if it has one, else its post.
+func _anchor_position() -> Vector2:
+	if follow_target != null:
+		return follow_target.global_position
+	return _post_position
 
 # Bad North pairing rule: an enemy no one is fighting beats an enemy that
 # already has attackers; among equals, the nearer one wins.
@@ -103,8 +149,9 @@ func _is_better_target(candidate: Combatant, current_best: Combatant) -> bool:
 			< global_position.distance_to(current_best.global_position)
 
 func _fight(target: Combatant) -> Vector2:
-	if global_position.distance_to(target.global_position) > attack_range:
-		return _velocity_toward(target.global_position, attack_range)
+	var reach: float = attack_range + target.target_radius()
+	if global_position.distance_to(target.global_position) > reach:
+		return _velocity_toward(target.global_position, reach)
 	if _attack_timer == 0.0:
 		_attack_timer = attack_interval
 		target.take_damage(attack_damage)
