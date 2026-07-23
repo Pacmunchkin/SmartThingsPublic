@@ -1,0 +1,43 @@
+# =============================================================================
+# SCRIPT-ONLY BASE CLASS — combatant.gd has no scene file of its own.
+#
+# Combatant (extends CharacterBody2D) is the shared base for anything that
+# can take part in a battle:
+#   - Recruit (recruit.gd) extends Combatant
+#   - Warlord (warlord.gd) extends Combatant
+#
+# Provides: team, health pool, take_damage() + died signal, the
+# engaged_count bookkeeping used for Bad North style pairing, and the
+# "combatants" group that targeting scans.
+#
+# Subclasses export their own max_health (defaults differ per class) and
+# MUST call super._ready() from their _ready().
+# =============================================================================
+
+extends CharacterBody2D
+class_name Combatant
+
+signal died(combatant: Combatant)
+
+# Combatants only fight combatants on a different team.
+@export var team: int = 0
+
+var health: float = 1.0
+var engaged_count: int = 0  # enemies currently targeting me (for pairing)
+
+func _ready() -> void:
+	add_to_group("combatants")
+
+# Can enemies pick me as a combat target right now?
+# Warlord overrides this: only targetable once its retinue is defeated.
+func can_be_targeted() -> bool:
+	return true
+
+func take_damage(amount: float) -> void:
+	health -= amount
+	if health <= 0.0:
+		_die()
+
+func _die() -> void:
+	died.emit(self)
+	queue_free()

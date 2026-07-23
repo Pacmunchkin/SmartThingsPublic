@@ -6,7 +6,8 @@
 # ├── WarlordA (warlord.tscn)      <- drag into "Warlord A" in the Inspector
 # ├── WarlordB (warlord.tscn)      <- drag into "Warlord B"
 # ├── WarlordX (warlord.tscn)      <- drag into "Warlord X"
-# └── WarlordY (warlord.tscn)      <- drag into "Warlord Y"
+# ├── WarlordY (warlord.tscn)      <- drag into "Warlord Y"
+# └── Village (village.tscn)       <- any number of village instances
 #
 # REQUIRED INPUT MAP (Project Settings > Input Map):
 #   select_a -> Joypad Button 0 (Bottom Action: Xbox A / Sony Cross)
@@ -15,6 +16,12 @@
 #   select_y -> Joypad Button 3 (Top Action:    Xbox Y / Sony Triangle)
 # Movement uses the built-in ui_* actions, which already include the left
 # stick and d-pad by default — no extra Input Map setup needed for movement.
+#
+# PERMADEATH: when a warlord dies its slot is cleared and its select button
+# goes dead for the rest of the run. If the selected warlord dies, selection
+# jumps to the first surviving warlord (A, B, X, Y order). If none survive,
+# nothing is selected and the camera stays where it is (game over screen is
+# a future iteration).
 # =============================================================================
 
 extends Node2D
@@ -30,7 +37,9 @@ class_name WarlordCommander
 var _selected: Warlord = null
 
 func _ready() -> void:
-	# Warlord A starts selected.
+	for warlord in [warlord_a, warlord_b, warlord_x, warlord_y]:
+		if warlord != null:
+			warlord.died.connect(_on_warlord_died)
 	_select(warlord_a)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -56,3 +65,20 @@ func _select(warlord: Warlord) -> void:
 	_selected = warlord
 	_selected.is_selected = true
 	_camera.global_position = _selected.global_position
+
+func _on_warlord_died(combatant: Combatant) -> void:
+	# Permadeath: clear the slot so its select button does nothing.
+	if combatant == warlord_a:
+		warlord_a = null
+	if combatant == warlord_b:
+		warlord_b = null
+	if combatant == warlord_x:
+		warlord_x = null
+	if combatant == warlord_y:
+		warlord_y = null
+	if _selected == combatant:
+		_selected = null
+		for survivor in [warlord_a, warlord_b, warlord_x, warlord_y]:
+			if survivor != null:
+				_select(survivor)
+				return

@@ -8,28 +8,25 @@
 # │                                   (Swap for a Sprite2D when art is ready.)
 # └── CollisionShape2D             <- physics collision shape
 #
+# Extends Combatant (combatant.gd) for team / health / died / pairing state.
+#
 # REUSE: this one scene is instanced everywhere recruits appear —
 # warlord retinues (warlord.tscn), village garrisons (village.tscn),
 # fortifications, watchtowers, etc.
 #
 # BEHAVIOR PRIORITY (highest first):
-#   1. FIGHT  — an enemy-team recruit is within aggro_range: pair up with it
-#               (Bad North style — prefer enemies nobody is fighting yet),
-#               chase it, and attack until one of us dies.
+#   1. FIGHT  — an enemy-team combatant in aggro_range is targetable:
+#               pair up with it (Bad North style — prefer enemies nobody is
+#               fighting yet), chase it, attack until one of us dies.
+#               Enemy warlords only become targetable once their own
+#               retinue is defeated (see warlord.gd can_be_targeted).
 #   2. FOLLOW — a follow target is set (retinue): trail the warlord.
 #   3. POST   — no follow target (garrison): stand at / return to the
 #               position this recruit was placed at.
 # =============================================================================
 
-extends CharacterBody2D
+extends Combatant
 class_name Recruit
-
-signal died(recruit: Recruit)
-
-# --- Team -------------------------------------------------------------------
-# Overwritten by the owning Warlord or Village at scene start.
-# Recruits only attack recruits on a different team.
-@export var team: int = 0
 
 # --- Movement ---------------------------------------------------------------
 @export var move_speed: float = 180.0   # pixels per second
@@ -44,17 +41,15 @@ signal died(recruit: Recruit)
 
 # --- Runtime state ----------------------------------------------------------
 var follow_target: Node2D = null
-var health: float
-var engaged_count: int = 0  # how many enemies are targeting me (for pairing)
 
-var _combat_target: Recruit = null
+var _combat_target: Combatant = null
 var _post_position: Vector2
 var _attack_timer: float = 0.0
 
 func _ready() -> void:
+	super._ready()
 	health = max_health
 	_post_position = global_position
-	add_to_group("recruits")
 
 # Called by the owning Warlord. Makes this recruit trail the target.
 # top_level = true detaches the recruit from its parent's transform so it
@@ -65,11 +60,6 @@ func set_follow_target(target: Node2D) -> void:
 		var keep := global_position
 		top_level = true
 		global_position = keep
-
-func take_damage(amount: float) -> void:
-	health -= amount
-	if health <= 0.0:
-		_die()
 
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
@@ -89,10 +79,12 @@ func _update_combat_target() -> void:
 		_combat_target = null
 	if _combat_target != null:
 		return
-	var best: Recruit = null
-	for node in get_tree().get_nodes_in_group("recruits"):
-		var other := node as Recruit
+	var best: Combatant = null
+	for node in get_tree().get_nodes_in_group("combatants"):
+		var other := node as Combatant
 		if other == null or other == self or other.team == team:
+			continue
+		if not other.can_be_targeted():
 			continue
 		if global_position.distance_to(other.global_position) > aggro_range:
 			continue
@@ -104,13 +96,13 @@ func _update_combat_target() -> void:
 
 # Bad North pairing rule: an enemy no one is fighting beats an enemy that
 # already has attackers; among equals, the nearer one wins.
-func _is_better_target(candidate: Recruit, current_best: Recruit) -> bool:
+func _is_better_target(candidate: Combatant, current_best: Combatant) -> bool:
 	if candidate.engaged_count != current_best.engaged_count:
 		return candidate.engaged_count < current_best.engaged_count
 	return global_position.distance_to(candidate.global_position) \
 			< global_position.distance_to(current_best.global_position)
 
-func _fight(target: Recruit) -> Vector2:
+func _fight(target: Combatant) -> Vector2:
 	if global_position.distance_to(target.global_position) > attack_range:
 		return _velocity_toward(target.global_position, attack_range)
 	if _attack_timer == 0.0:
@@ -127,5 +119,4 @@ func _velocity_toward(point: Vector2, stop_at: float) -> Vector2:
 func _die() -> void:
 	if _combat_target != null and is_instance_valid(_combat_target):
 		_combat_target.engaged_count -= 1
-	died.emit(self)
-	queue_free()
+	super._die()
