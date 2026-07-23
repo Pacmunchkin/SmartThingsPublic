@@ -58,6 +58,19 @@ class_name Warlord
 # Villages stop mustering recruits into this retinue once it is full.
 @export var max_retinue: int = 50
 
+# The unit type this warlord's recruits fight as (Seaxes, Axes, Spears,
+# Shield & Sword, Bows). Drag a UnitType .tres here. Every recruit that
+# joins the retinue takes these stats. Empty = recruit script defaults.
+@export var unit_type: UnitType
+
+# --- Abilities --------------------------------------------------------------
+# Cooldown powers, one per d-pad direction: hold X + press Up/Left/Right
+# (handled by WarlordCommander for the selected warlord). Drag Ability
+# .tres assets here. Effects apply to this warlord AND its retinue.
+@export var ability_up: Ability
+@export var ability_left: Ability
+@export var ability_right: Ability
+
 # --- Selection --------------------------------------------------------------
 # Set by WarlordCommander. Read by PlayerController: only the selected
 # player warlord responds to the stick. Meaningless for AI warlords.
@@ -68,6 +81,8 @@ var army_size: int = 0
 
 var _attack_timer: float = 0.0
 var _controller: WarlordController = null
+var _ability_cooldowns: Array[float] = [0.0, 0.0, 0.0]  # up, left, right
+var _active_effects: Array[Dictionary] = []  # {ability: Ability, time_left: float}
 
 @onready var _retinue: Node2D = $Retinue
 
@@ -84,6 +99,8 @@ func _ready() -> void:
 # the scene at start, and garrison recruits mustered by a Village.
 func add_recruit(recruit: Recruit) -> void:
 	recruit.team = team
+	if unit_type != null:
+		recruit.apply_unit_type(unit_type)
 	recruit.set_follow_target(self)
 	recruit.died.connect(_on_recruit_died)
 	army_size += 1
@@ -96,12 +113,61 @@ func can_be_targeted() -> bool:
 
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_update_abilities(delta)
 	_auto_attack()
 	var direction := Vector2.ZERO
 	if _controller != null:
 		direction = _controller.get_move_direction().limit_length(1.0)
-	velocity = direction * move_speed
+	velocity = direction * move_speed * speed_multiplier
 	move_and_slide()
+
+# --- Abilities --------------------------------------------------------------
+
+# Called by WarlordCommander. Slots: 0 = up, 1 = left, 2 = right.
+func activate_ability(slot: int) -> void:
+	var ability := _get_ability(slot)
+	if ability == null or _ability_cooldowns[slot] > 0.0:
+		return
+	_ability_cooldowns[slot] = ability.cooldown
+	_active_effects.append({"ability": ability, "time_left": ability.duration})
+
+func _get_ability(slot: int) -> Ability:
+	match slot:
+		0: return ability_up
+		1: return ability_left
+		2: return ability_right
+	return null
+
+func _update_abilities(delta: float) -> void:
+	for i in _ability_cooldowns.size():
+		_ability_cooldowns[i] = maxf(_ability_cooldowns[i] - delta, 0.0)
+	var any_expired := false
+	for effect in _active_effects:
+		effect.time_left -= delta
+		if effect.time_left <= 0.0:
+			any_expired = true
+	if any_expired:
+		_active_effects = _active_effects.filter(
+				func(e: Dictionary) -> bool: return e.time_left > 0.0)
+	_apply_ability_modifiers()
+
+# Recompute and push modifiers to self and the whole retinue.
+func _apply_ability_modifiers() -> void:
+	var speed_mult := 1.0
+	var damage_mult := 1.0
+	for effect in _active_effects:
+		var ability: Ability = effect.ability
+		match ability.effect:
+			Ability.Effect.CHARGE:
+				speed_mult *= ability.magnitude
+			Ability.Effect.STEADFAST:
+				damage_mult *= ability.magnitude
+	speed_multiplier = speed_mult
+	damage_taken_multiplier = damage_mult
+	for child in _retinue.get_children():
+		if child is Recruit:
+			child.speed_multiplier = speed_mult
+			child.damage_taken_multiplier = damage_mult
 
 # Swing at the nearest targetable enemy in reach, on cooldown.
 # Living enemies outrank structures (e.g. a city gate).

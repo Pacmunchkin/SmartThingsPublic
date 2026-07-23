@@ -22,12 +22,21 @@
 # Team set in the Inspector.
 #
 # REQUIRED INPUT MAP (Project Settings > Input Map):
-#   select_a -> Joypad Button 0 (Bottom Action: Xbox A / Sony Cross)
-#   select_b -> Joypad Button 1 (Right Action:  Xbox B / Sony Circle)
-#   select_x -> Joypad Button 2 (Left Action:   Xbox X / Sony Square)
-#   select_y -> Joypad Button 3 (Top Action:    Xbox Y / Sony Triangle)
-# Movement uses the built-in ui_* actions, which already include the left
-# stick and d-pad by default — no extra Input Map setup needed for movement.
+#   select_a      -> Joypad Button 0 (Bottom Action: Xbox A / Sony Cross)
+#   select_b      -> Joypad Button 1 (Right Action:  Xbox B / Sony Circle)
+#   select_x      -> Joypad Button 2 (Left Action:   Xbox X / Sony Square)
+#   select_y      -> Joypad Button 3 (Top Action:    Xbox Y / Sony Triangle)
+#   ability_up    -> Joypad D-pad Up
+#   ability_left  -> Joypad D-pad Left
+#   ability_right -> Joypad D-pad Right
+#   move_left / move_right / move_up / move_down
+#                 -> LEFT STICK axes only (see player_controller.gd);
+#                    keep the d-pad out of these — it belongs to abilities.
+#
+# ABILITIES: hold X and press d-pad Up / Left / Right to fire the selected
+# warlord's matching ability slot (see warlord.gd / ability.gd). Because X
+# doubles as a modifier, warlord X is selected on RELEASE of the X button:
+# a plain tap still selects, but a hold used for an ability does not.
 #
 # PERMADEATH: when a warlord dies its slot is cleared and its select button
 # goes dead for the rest of the run. If the selected warlord dies, selection
@@ -47,6 +56,7 @@ class_name WarlordCommander
 @onready var _camera: Camera2D = $Camera2D
 
 var _selected: Warlord = null
+var _x_hold_used: bool = false  # X was used as an ability modifier
 
 func _ready() -> void:
 	for warlord in [warlord_a, warlord_b, warlord_x, warlord_y]:
@@ -59,10 +69,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		_select(warlord_a)
 	elif event.is_action_pressed("select_b"):
 		_select(warlord_b)
-	elif event.is_action_pressed("select_x"):
-		_select(warlord_x)
 	elif event.is_action_pressed("select_y"):
 		_select(warlord_y)
+	elif event.is_action_released("select_x"):
+		# X selects on release so that hold-X + d-pad can fire abilities.
+		if not _x_hold_used:
+			_select(warlord_x)
+		_x_hold_used = false
+	elif event.is_action_pressed("ability_up"):
+		_try_ability(0)
+	elif event.is_action_pressed("ability_left"):
+		_try_ability(1)
+	elif event.is_action_pressed("ability_right"):
+		_try_ability(2)
+
+# Fire an ability slot on the selected warlord — only while X is held.
+func _try_ability(slot: int) -> void:
+	if not Input.is_action_pressed("select_x"):
+		return
+	_x_hold_used = true
+	if _selected != null:
+		_selected.activate_ability(slot)
 
 func _process(_delta: float) -> void:
 	# Camera stays snapped to the selected warlord (no smoothing, no tween).

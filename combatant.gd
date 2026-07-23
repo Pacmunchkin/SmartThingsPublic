@@ -25,6 +25,11 @@ signal died(combatant: Combatant)
 var health: float = 1.0
 var engaged_count: int = 0  # enemies currently targeting me (for pairing)
 
+# Ability modifiers, set by an owning Warlord's active abilities
+# (see warlord.gd): Steadfast scales damage taken, Charge scales speed.
+var damage_taken_multiplier: float = 1.0
+var speed_multiplier: float = 1.0
+
 func _ready() -> void:
 	add_to_group("combatants")
 
@@ -44,7 +49,7 @@ func target_radius() -> float:
 	return 0.0
 
 func take_damage(amount: float) -> void:
-	health -= amount
+	health -= amount * damage_taken_multiplier
 	if health <= 0.0:
 		_die()
 

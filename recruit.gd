@@ -39,17 +39,40 @@ class_name Recruit
 @export var attack_range: float = 24.0   # close enough to swing
 @export var aggro_range: float = 160.0   # enemies inside this start a fight
 
+# --- Ranged (overwritten by a UnitType; 0 range = pure melee) ---------------
+var ranged_range: float = 0.0
+var ranged_damage: float = 0.0
+var ranged_interval: float = 3.0
+var projectile_speed: float = 400.0
+var ranged_only: bool = false
+
 # --- Runtime state ----------------------------------------------------------
 var follow_target: Node2D = null
 
 var _combat_target: Combatant = null
 var _post_position: Vector2
 var _attack_timer: float = 0.0
+var _ranged_timer: float = 0.0
 
 func _ready() -> void:
 	super._ready()
 	health = max_health
 	_post_position = global_position
+
+# Called by the owning Warlord: this recruit fights as the given type
+# (Seaxes, Axes, Spears, Shield & Sword, Bows — see unit_type.gd).
+func apply_unit_type(unit_type: UnitType) -> void:
+	move_speed = unit_type.move_speed
+	max_health = unit_type.max_health
+	health = unit_type.max_health
+	attack_damage = unit_type.attack_damage
+	attack_interval = unit_type.attack_interval
+	attack_range = unit_type.attack_range
+	ranged_range = unit_type.ranged_range
+	ranged_damage = unit_type.ranged_damage
+	ranged_interval = unit_type.ranged_interval
+	projectile_speed = unit_type.projectile_speed
+	ranged_only = unit_type.ranged_only
 
 # Called by the owning Warlord. Makes this recruit trail the target.
 # top_level = true detaches the recruit from its parent's transform so it
@@ -63,6 +86,7 @@ func set_follow_target(target: Node2D) -> void:
 
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_ranged_timer = maxf(_ranged_timer - delta, 0.0)
 	_update_combat_target()
 	if _combat_target != null:
 		velocity = _fight(_combat_target)
@@ -150,18 +174,42 @@ func _is_better_target(candidate: Combatant, current_best: Combatant) -> bool:
 
 func _fight(target: Combatant) -> Vector2:
 	var reach: float = attack_range + target.target_radius()
-	if global_position.distance_to(target.global_position) > reach:
-		return _velocity_toward(target.global_position, reach)
-	if _attack_timer == 0.0:
-		_attack_timer = attack_interval
-		target.take_damage(attack_damage)
-	return Vector2.ZERO
+	var dist: float = global_position.distance_to(target.global_position)
+	# Melee swing when in reach (bows never melee).
+	if dist <= reach and not ranged_only:
+		if _attack_timer == 0.0:
+			_attack_timer = attack_interval
+			target.take_damage(attack_damage)
+		return Vector2.ZERO
+	var ranged_reach: float = ranged_range + target.target_radius()
+	if ranged_range > 0.0 and dist <= ranged_reach:
+		if ranged_only:
+			# Bows hold position to shoot — they cannot move and attack.
+			if _ranged_timer == 0.0:
+				_ranged_timer = ranged_interval
+				_loose_projectile(target)
+			return Vector2.ZERO
+		# Spears throw on the move while closing to melee.
+		if _ranged_timer == 0.0 and dist > reach:
+			_ranged_timer = ranged_interval
+			_loose_projectile(target)
+	if ranged_only:
+		return _velocity_toward(target.global_position, ranged_reach)
+	return _velocity_toward(target.global_position, reach)
+
+func _loose_projectile(target: Combatant) -> void:
+	var arrow := Arrow.new()
+	arrow.target = target
+	arrow.damage = ranged_damage
+	arrow.speed = projectile_speed
+	get_tree().current_scene.add_child(arrow)
+	arrow.global_position = global_position
 
 func _velocity_toward(point: Vector2, stop_at: float) -> Vector2:
 	var to_point: Vector2 = point - global_position
 	if to_point.length() <= stop_at:
 		return Vector2.ZERO
-	return to_point.normalized() * move_speed
+	return to_point.normalized() * move_speed * speed_multiplier
 
 func _die() -> void:
 	if _combat_target != null and is_instance_valid(_combat_target):
