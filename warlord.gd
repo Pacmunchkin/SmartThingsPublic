@@ -4,6 +4,8 @@
 # Warlord (CharacterBody2D)        <- attach this script (warlord.gd) here
 # ├── Sprite2D                     <- warlord visual
 # ├── CollisionShape2D             <- physics collision shape
+# ├── HealthBar (Node2D)           <- health_bar.gd, position (0, 18)
+# ├── SelectionMarker (Node2D)     <- selection_marker.gd, position (0, -24)
 # └── Retinue (Node2D)             <- plain Node2D; drop recruit.tscn
 #     ├── Recruit (recruit.tscn)      instances in here. Each recruit found
 #     └── ...                         here at scene start follows this
@@ -136,7 +138,7 @@ func _physics_process(delta: float) -> void:
 
 # Called by WarlordCommander. Slots: 0 = up, 1 = left, 2 = right.
 func activate_ability(slot: int) -> void:
-	var ability := _get_ability(slot)
+	var ability := get_ability(slot)
 	if ability == null or _ability_cooldowns[slot] > 0.0:
 		return
 	_ability_cooldowns[slot] = ability.cooldown
@@ -209,12 +211,24 @@ func _do_call(ability: Ability) -> void:
 			continue
 		village.send_garrison(self)
 
-func _get_ability(slot: int) -> Ability:
+func get_ability(slot: int) -> Ability:
 	match slot:
 		0: return ability_up
 		1: return ability_left
 		2: return ability_right
 	return null
+
+# --- UI queries (used by hud.gd) --------------------------------------------
+
+func get_ability_cooldown(slot: int) -> float:
+	return _ability_cooldowns[slot]
+
+# Seconds a sustained ability has left, 0 if it is not currently active.
+func get_ability_active_time(ability: Ability) -> float:
+	for effect in _active_effects:
+		if effect.ability == ability:
+			return effect.time_left
+	return 0.0
 
 func _update_abilities(delta: float) -> void:
 	for i in _ability_cooldowns.size():

@@ -15,7 +15,9 @@
 # │   └── AIController (Node)      <- ai_controller.gd
 # ├── Village (village.tscn)       <- any number of village instances
 # ├── Burh (burh.tscn)             <- fortifications at choke points
-# └── City (city.tscn)             <- walled city with gate + battlements
+# ├── City (city.tscn)             <- walled city with gate + battlements
+# └── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
+#                                     army size, ability cooldowns
 #
 # Only player warlords go in the four commander slots below. Enemy warlords
 # are plain warlord.tscn instances with an AIController child and their
@@ -95,6 +97,10 @@ func _process(_delta: float) -> void:
 	# Camera stays snapped to the selected warlord (no smoothing, no tween).
 	if _selected != null:
 		_camera.global_position = _selected.global_position
+
+# Used by hud.gd; null when no warlord survives.
+func get_selected_warlord() -> Warlord:
+	return _selected
 
 func _select(warlord: Warlord) -> void:
 	if warlord == null or warlord == _selected:
