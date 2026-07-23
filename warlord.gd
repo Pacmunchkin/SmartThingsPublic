@@ -9,15 +9,24 @@
 #     └── ...                         here at scene start follows this
 #                                     warlord and adds +1 to army_size.
 #
+# CONTROLLER (added per instance in the LEVEL scene, not inside
+# warlord.tscn) — the same warlord scene serves player and AI:
+#
+#   WarlordA (warlord.tscn, Team 0)       EnemyWarlord (warlord.tscn, Team 1)
+#   └── Controller (Node)                 └── AIController (Node)
+#       [player_controller.gd]                [ai_controller.gd]
+#
+# warlord.gd finds its controller by wildcard name "*Controller" and asks
+# it for a move direction every physics frame. No controller = stands still
+# (but still auto-attacks and can still be fought).
+#
 # Extends Combatant (combatant.gd) for team / health / died handling.
-# This scene is instanced multiple times inside main.tscn — see
-# warlord_commander.gd for the main scene layout.
 #
 # COMBAT: the warlord cannot be targeted while any of its retinue lives
 # (can_be_targeted below). Once the retinue is defeated, enemy recruits
 # turn on the warlord. The warlord auto-attacks the nearest enemy inside
-# attack_range every attack_interval, selected or not — movement stays
-# player-controlled, the swings are automatic.
+# attack_range every attack_interval — movement comes from the controller,
+# the swings are automatic.
 #
 # DEATH IS PERMANENT: the warlord is removed from the game and
 # WarlordCommander drops it (its select button goes dead).
@@ -45,15 +54,20 @@ class_name Warlord
 @export var attack_interval: float = 1.0 # seconds between attacks
 @export var attack_range: float = 24.0   # close enough to swing
 
+# --- Retinue / army ---------------------------------------------------------
+# Villages stop mustering recruits into this retinue once it is full.
+@export var max_retinue: int = 50
+
 # --- Selection --------------------------------------------------------------
-# Set by WarlordCommander. Only the selected warlord responds to the stick.
+# Set by WarlordCommander. Read by PlayerController: only the selected
+# player warlord responds to the stick. Meaningless for AI warlords.
 var is_selected: bool = false
 
-# --- Retinue / army ---------------------------------------------------------
-# +1 per recruit in the Retinue node at scene start, -1 when one dies.
+# +1 per recruit under this warlord's command, -1 when one dies.
 var army_size: int = 0
 
 var _attack_timer: float = 0.0
+var _controller: WarlordController = null
 
 @onready var _retinue: Node2D = $Retinue
 
@@ -61,6 +75,7 @@ func _ready() -> void:
 	super._ready()
 	add_to_group("warlords")
 	health = max_health
+	_controller = find_child("*Controller", false, false) as WarlordController
 	for child in _retinue.get_children():
 		if child is Recruit:
 			add_recruit(child)
@@ -82,11 +97,10 @@ func can_be_targeted() -> bool:
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
 	_auto_attack()
-	if not is_selected:
-		velocity = Vector2.ZERO
-		return
-	var input_dir: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	velocity = input_dir * move_speed
+	var direction := Vector2.ZERO
+	if _controller != null:
+		direction = _controller.get_move_direction().limit_length(1.0)
+	velocity = direction * move_speed
 	move_and_slide()
 
 # Swing at the nearest targetable enemy in reach, on cooldown.

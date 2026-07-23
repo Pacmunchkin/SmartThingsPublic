@@ -9,21 +9,26 @@
 #                                     to garrison_size.
 #
 # INSPECTOR SETUP: drag recruit.tscn into "Recruit Scene" so the village
-# can produce new recruits after being conquered.
+# can produce recruits.
 #
 # GARRISON: garrison recruits hold the position they were placed at and
 # fight any enemy-team combatant that comes within their aggro_range
 # (see recruit.gd). Survivors walk back to their posts afterwards.
 #
+# PRODUCTION: every village produces from scene start — one recruit every
+# production_interval seconds, spawned at the Garrison node — until the
+# garrison holds max_garrison recruits. Production pauses while full and
+# resumes when there is room again.
+#
 # CONQUEST: when the garrison is wiped out and a warlord of another team
 # is within warlord_range, the village flips to that warlord's team and
-# starts producing recruits (one every production_interval seconds,
-# spawned at the Garrison node).
+# production continues for the new owner.
 #
-# MUSTERING: whenever a same-team warlord is within warlord_range, every
-# garrison recruit (including freshly produced ones) transfers into that
-# warlord's retinue. If no friendly warlord is near, produced recruits
-# loiter at the garrison — and guard the village — until one returns.
+# MUSTERING: whenever a same-team warlord is within warlord_range, garrison
+# recruits (including freshly produced ones) transfer into that warlord's
+# retinue until the retinue is full (warlord.max_retinue). If no friendly
+# warlord is near, recruits loiter at the garrison — and guard the
+# village — until one returns.
 #
 # Instance village.tscn into main.tscn wherever a village belongs.
 # Set "Team" in the Inspector per village (player warlords default to 0).
@@ -37,11 +42,14 @@ class_name Village
 # Recruits only fight recruits on a different team.
 @export var team: int = 1
 
-# Drag recruit.tscn here; needed for post-conquest production.
+# Drag recruit.tscn here; needed for production.
 @export var recruit_scene: PackedScene
 
-# Seconds between produced recruits once the village has been conquered.
+# Seconds between produced recruits.
 @export var production_interval: float = 10.0
+
+# Production pauses while the garrison holds this many recruits.
+@export var max_garrison: int = 25
 
 # "The warlord is at the village" distance, used for both conquest and
 # mustering garrison recruits into a retinue.
@@ -50,12 +58,12 @@ class_name Village
 # +1 per recruit in the Garrison node, -1 when one dies or joins a retinue.
 var garrison_size: int = 0
 
-var _production_enabled: bool = false
 var _production_timer: float = 0.0
 
 @onready var _garrison: Node2D = $Garrison
 
 func _ready() -> void:
+	_production_timer = production_interval
 	for child in _garrison.get_children():
 		if child is Recruit:
 			_enroll(child)
@@ -77,8 +85,7 @@ func _on_recruit_died(_recruit: Combatant) -> void:
 
 # --- Conquest ---------------------------------------------------------------
 
-# Garrison dead + enemy warlord at the village = the village changes hands
-# and begins producing recruits for its new owner.
+# Garrison dead + enemy warlord at the village = the village changes hands.
 func _try_capture() -> void:
 	if garrison_size > 0:
 		return
@@ -86,13 +93,11 @@ func _try_capture() -> void:
 	if conqueror == null:
 		return
 	team = conqueror.team
-	_production_enabled = true
-	_production_timer = production_interval
 
 # --- Production -------------------------------------------------------------
 
 func _produce(delta: float) -> void:
-	if not _production_enabled or recruit_scene == null:
+	if recruit_scene == null or garrison_size >= max_garrison:
 		return
 	_production_timer -= delta
 	if _production_timer <= 0.0:
@@ -110,7 +115,8 @@ func _spawn_recruit() -> void:
 
 # --- Mustering --------------------------------------------------------------
 
-# A friendly warlord within warlord_range collects the whole garrison.
+# A friendly warlord within warlord_range collects the garrison, up to
+# its retinue cap.
 func _muster() -> void:
 	if garrison_size == 0:
 		return
@@ -118,6 +124,8 @@ func _muster() -> void:
 	if warlord == null:
 		return
 	for child in _garrison.get_children():
+		if warlord.army_size >= warlord.max_retinue:
+			break
 		if child is Recruit:
 			_transfer(child, warlord)
 

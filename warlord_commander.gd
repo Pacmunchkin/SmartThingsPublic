@@ -4,10 +4,20 @@
 # Main (Node2D)                    <- attach this script (warlord_commander.gd)
 # ├── Camera2D                     <- single game camera, driven by this script
 # ├── WarlordA (warlord.tscn)      <- drag into "Warlord A" in the Inspector
+# │   └── Controller (Node)        <- player_controller.gd
 # ├── WarlordB (warlord.tscn)      <- drag into "Warlord B"
+# │   └── Controller (Node)        <- player_controller.gd
 # ├── WarlordX (warlord.tscn)      <- drag into "Warlord X"
+# │   └── Controller (Node)        <- player_controller.gd
 # ├── WarlordY (warlord.tscn)      <- drag into "Warlord Y"
+# │   └── Controller (Node)        <- player_controller.gd
+# ├── EnemyWarlord (warlord.tscn)  <- Team = 1; NOT in a commander slot
+# │   └── AIController (Node)      <- ai_controller.gd
 # └── Village (village.tscn)       <- any number of village instances
+#
+# Only player warlords go in the four commander slots below. Enemy warlords
+# are plain warlord.tscn instances with an AIController child and their
+# Team set in the Inspector.
 #
 # REQUIRED INPUT MAP (Project Settings > Input Map):
 #   select_a -> Joypad Button 0 (Bottom Action: Xbox A / Sony Cross)
