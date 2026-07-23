@@ -47,17 +47,24 @@ var projectile_speed: float = 400.0
 var ranged_only: bool = false
 
 # --- Runtime state ----------------------------------------------------------
+# Target SEARCHES run at most 4x/s (staggered per recruit) — with hundreds
+# of idle units, scanning the combatants group every frame is the main CPU
+# cost. Fighting itself is not throttled.
+const TARGET_SCAN_INTERVAL: float = 0.25
+
 var follow_target: Node2D = null
 
 var _combat_target: Combatant = null
 var _post_position: Vector2
 var _attack_timer: float = 0.0
 var _ranged_timer: float = 0.0
+var _scan_timer: float = 0.0
 
 func _ready() -> void:
 	super._ready()
 	health = max_health
 	_post_position = global_position
+	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
 
 # Called by the owning Warlord: this recruit fights as the given type
 # (Seaxes, Axes, Spears, Shield & Sword, Bows — see unit_type.gd).
@@ -87,6 +94,7 @@ func set_follow_target(target: Node2D) -> void:
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
 	_ranged_timer = maxf(_ranged_timer - delta, 0.0)
+	_scan_timer = maxf(_scan_timer - delta, 0.0)
 	stun_timer = maxf(stun_timer - delta, 0.0)
 	if is_stunned():
 		velocity = Vector2.ZERO
@@ -114,6 +122,10 @@ func _update_combat_target() -> void:
 	# Duels with living enemies stay committed until one side dies.
 	if _combat_target != null and not _combat_target.is_structure():
 		return
+	# Everything below SEARCHES for a target — throttled.
+	if _scan_timer > 0.0:
+		return
+	_scan_timer = TARGET_SCAN_INTERVAL
 	# Living enemies always outrank structures.
 	var best_unit := _best_unit_target()
 	if best_unit != null:

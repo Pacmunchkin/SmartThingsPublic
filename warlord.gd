@@ -81,10 +81,15 @@ var is_selected: bool = false
 # +1 per recruit under this warlord's command, -1 when one dies.
 var army_size: int = 0
 
+# Idle target searches run at most 4x/s; swings at enemies already in
+# reach are never delayed, so combat pacing (and 5-vs-6 tuning) is intact.
+const TARGET_SCAN_INTERVAL: float = 0.25
+
 var _attack_timer: float = 0.0
 var _controller: WarlordController = null
 var _ability_cooldowns: Array[float] = [0.0, 0.0, 0.0]  # up, left, right
 var _active_effects: Array[Dictionary] = []  # {ability: Ability, time_left: float}
+var _scan_timer: float = 0.0
 
 @onready var _retinue: Node2D = $Retinue
 
@@ -92,6 +97,7 @@ func _ready() -> void:
 	super._ready()
 	add_to_group("warlords")
 	health = max_health
+	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
 	_controller = find_child("*Controller", false, false) as WarlordController
 	for child in _retinue.get_children():
 		if child is Recruit:
@@ -122,6 +128,7 @@ func can_be_targeted() -> bool:
 
 func _physics_process(delta: float) -> void:
 	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_scan_timer = maxf(_scan_timer - delta, 0.0)
 	_update_abilities(delta)
 	stun_timer = maxf(stun_timer - delta, 0.0)
 	if is_stunned():
@@ -276,6 +283,8 @@ func _apply_ability_modifiers() -> void:
 func _auto_attack() -> void:
 	if _attack_timer > 0.0:
 		return
+	if _scan_timer > 0.0:
+		return  # last scan found nothing in reach; don't rescan every frame
 	var best_unit: Combatant = null
 	var best_unit_dist: float = attack_range
 	var best_structure: Combatant = null
@@ -297,16 +306,18 @@ func _auto_attack() -> void:
 			best_unit_dist = dist
 			best_unit = other
 	var target := best_unit if best_unit != null else best_structure
-	if target != null:
-		_attack_timer = attack_interval
-		target.take_damage(attack_damage)
-		# Advance: the warlord's own hits shove the enemy back too.
-		if melee_push > 0.0 and is_instance_valid(target) \
-				and not target.is_structure():
-			var offset: Vector2 = target.global_position - global_position
-			var dir := offset.normalized() if offset.length() > 0.0 \
-					else Vector2.RIGHT
-			target.move_and_collide(dir * melee_push)
+	if target == null:
+		_scan_timer = TARGET_SCAN_INTERVAL  # idle: wait before rescanning
+		return
+	_attack_timer = attack_interval
+	target.take_damage(attack_damage)
+	# Advance: the warlord's own hits shove the enemy back too.
+	if melee_push > 0.0 and is_instance_valid(target) \
+			and not target.is_structure():
+		var offset: Vector2 = target.global_position - global_position
+		var dir := offset.normalized() if offset.length() > 0.0 \
+				else Vector2.RIGHT
+		target.move_and_collide(dir * melee_push)
 
 func _on_recruit_died(_recruit: Combatant) -> void:
 	army_size -= 1

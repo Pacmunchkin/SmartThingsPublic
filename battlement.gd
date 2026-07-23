@@ -29,14 +29,24 @@ class_name Battlement
 @export var arrow_damage: float = 2.0
 @export var arrow_speed: float = 400.0  # pixels per second
 
+# Idle target searches run at most 4x/s (staggered); an arrow is never
+# delayed once an enemy is actually in range and the fire timer is ready.
+const TARGET_SCAN_INTERVAL: float = 0.25
+
 var _fire_timer: float = 0.0
+var _scan_timer: float = 0.0
+
+func _ready() -> void:
+	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across towers
 
 func _physics_process(delta: float) -> void:
 	_fire_timer = maxf(_fire_timer - delta, 0.0)
-	if _fire_timer > 0.0:
+	_scan_timer = maxf(_scan_timer - delta, 0.0)
+	if _fire_timer > 0.0 or _scan_timer > 0.0:
 		return
 	var target := _nearest_enemy()
 	if target == null:
+		_scan_timer = TARGET_SCAN_INTERVAL  # idle: wait before rescanning
 		return
 	_fire_timer = fire_interval
 	var arrow := Arrow.new()

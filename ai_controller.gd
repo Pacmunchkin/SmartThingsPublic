@@ -18,19 +18,34 @@
 extends WarlordController
 class_name AIController
 
+# Enemy searches run at most 4x/s; the chase itself updates every frame
+# because the cached target's live position is followed between scans.
+const TARGET_SCAN_INTERVAL: float = 0.25
+
 @export var aggro_range: float = 160.0  # enemies inside this get chased
 
 var _post_position: Vector2
+var _scan_timer: float = 0.0
+var _cached_enemy: Combatant = null
 
 func _ready() -> void:
 	super._ready()
+	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
 	if _warlord != null:
 		_post_position = _warlord.global_position
+
+func _physics_process(delta: float) -> void:
+	_scan_timer = maxf(_scan_timer - delta, 0.0)
 
 func get_move_direction() -> Vector2:
 	if _warlord == null:
 		return Vector2.ZERO
-	var enemy := _nearest_enemy()
+	if _cached_enemy != null and not is_instance_valid(_cached_enemy):
+		_cached_enemy = null
+	if _scan_timer <= 0.0:
+		_scan_timer = TARGET_SCAN_INTERVAL
+		_cached_enemy = _nearest_enemy()
+	var enemy := _cached_enemy
 	if enemy != null:
 		if _warlord.global_position.distance_to(enemy.global_position) \
 				<= _warlord.attack_range:
