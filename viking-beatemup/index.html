@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood on the Whale-Road — A Viking Saga</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game-shell">
+    <canvas id="game-canvas" width="960" height="480"></canvas>
+
+    <!-- Title screen overlay -->
+    <div id="title-screen" class="overlay">
+      <h1>BLOOD ON THE WHALE-ROAD</h1>
+      <p class="subtitle">Britain, 866 AD. The Great Heathen Army has landed.</p>
+      <p class="subtitle">You are Ragnvald Half-Axe, and the Saxons bar your way.</p>
+      <button id="btn-start" class="big-button">Raise Your Axe</button>
+    </div>
+
+    <!-- Battle end overlay (victory / defeat) -->
+    <div id="end-screen" class="overlay hidden">
+      <h1 id="end-title"></h1>
+      <p id="end-text" class="subtitle"></p>
+      <button id="btn-again" class="big-button">Fight Again</button>
+    </div>
+
+    <!-- In-battle UI -->
+    <div id="battle-ui" class="hidden">
+      <div id="action-bar"></div>
+      <div id="combat-log"></div>
+    </div>
+  </div>
+
+  <script src="js/entities.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
