@@ -26,9 +26,12 @@ var health: float = 1.0
 var engaged_count: int = 0  # enemies currently targeting me (for pairing)
 
 # Ability modifiers, set by an owning Warlord's active abilities
-# (see warlord.gd): Steadfast scales damage taken, Charge scales speed.
+# (see warlord.gd): Steadfast scales all damage taken, Ditch scales ranged
+# damage taken, Charge scales speed, Advance shoves on melee hits.
 var damage_taken_multiplier: float = 1.0
+var ranged_damage_taken_multiplier: float = 1.0
 var speed_multiplier: float = 1.0
+var melee_push: float = 0.0  # px each of my melee hits shoves the target
 
 # Stun (e.g. from Knock Back): a stunned combatant cannot move or attack.
 # Subclasses tick stun_timer down in _physics_process and early-out.
@@ -62,6 +65,10 @@ func take_damage(amount: float) -> void:
 	health -= amount * damage_taken_multiplier
 	if health <= 0.0:
 		_die()
+
+# Damage from projectiles (arrows, javelins) — Ditch resists this channel.
+func take_ranged_damage(amount: float) -> void:
+	take_damage(amount * ranged_damage_taken_multiplier)
 
 func _die() -> void:
 	died.emit(self)

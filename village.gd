@@ -63,6 +63,7 @@ var _production_timer: float = 0.0
 @onready var _garrison: Node2D = $Garrison
 
 func _ready() -> void:
+	add_to_group("villages")
 	_production_timer = production_interval
 	for child in _garrison.get_children():
 		if child is Recruit:
@@ -133,6 +134,15 @@ func _transfer(recruit: Recruit, warlord: Warlord) -> void:
 	recruit.died.disconnect(_on_recruit_died)
 	garrison_size -= 1
 	warlord.add_recruit(recruit)
+
+# Called by the Call ability (see warlord.gd): send the garrison to this
+# warlord no matter how far away it is — they run there. Cap still applies.
+func send_garrison(warlord: Warlord) -> void:
+	for child in _garrison.get_children():
+		if warlord.army_size >= warlord.max_retinue:
+			break
+		if child is Recruit:
+			_transfer(child, warlord)
 
 # --- Helpers ----------------------------------------------------------------
 

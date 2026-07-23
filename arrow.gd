@@ -22,7 +22,7 @@ func _physics_process(delta: float) -> void:
 	rotation = to_target.angle()
 	var step: float = speed * delta
 	if to_target.length() <= step:
-		target.take_damage(damage)
+		target.take_ranged_damage(damage)
 		queue_free()
 		return
 	global_position += to_target.normalized() * step

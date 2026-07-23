@@ -143,6 +143,10 @@ func activate_ability(slot: int) -> void:
 	match ability.effect:
 		Ability.Effect.KNOCK_BACK:
 			_do_knock_back(ability)  # instant, nothing sustained
+		Ability.Effect.DRAW_OUT:
+			_do_draw_out(ability)    # instant taunt; commitment does the rest
+		Ability.Effect.CALL:
+			_do_call(ability)        # instant summons; recruits run over
 		Ability.Effect.WARLORD_LEADS:
 			_heal_retinue(ability.magnitude)
 			_active_effects.append({"ability": ability, "time_left": ability.duration})
@@ -170,6 +174,41 @@ func _heal_retinue(amount: float) -> void:
 		if child is Recruit:
 			child.health = minf(child.health + amount, child.max_health)
 
+# Draw Out: force every enemy recruit within radius to engage this army.
+# Lures are the retinue; a retinue-less warlord lures onto itself.
+func _do_draw_out(ability: Ability) -> void:
+	var lures: Array[Combatant] = []
+	for child in _retinue.get_children():
+		if child is Recruit:
+			lures.append(child)
+	if lures.is_empty():
+		lures.append(self)
+	for node in get_tree().get_nodes_in_group("combatants"):
+		var enemy := node as Recruit
+		if enemy == null or enemy.team == team:
+			continue
+		if enemy.global_position.distance_to(global_position) > ability.radius:
+			continue
+		var nearest: Combatant = null
+		var nearest_dist: float = INF
+		for lure in lures:
+			var dist := enemy.global_position.distance_to(lure.global_position)
+			if dist < nearest_dist:
+				nearest_dist = dist
+				nearest = lure
+		if nearest != null:
+			enemy.force_engage(nearest)
+
+# Call: every same-team village within radius sends its garrison running.
+func _do_call(ability: Ability) -> void:
+	for node in get_tree().get_nodes_in_group("villages"):
+		var village := node as Village
+		if village == null or village.team != team:
+			continue
+		if global_position.distance_to(village.global_position) > ability.radius:
+			continue
+		village.send_garrison(self)
+
 func _get_ability(slot: int) -> Ability:
 	match slot:
 		0: return ability_up
@@ -194,6 +233,8 @@ func _update_abilities(delta: float) -> void:
 func _apply_ability_modifiers() -> void:
 	var speed_mult := 1.0
 	var damage_mult := 1.0
+	var ranged_mult := 1.0
+	var push := 0.0
 	for effect in _active_effects:
 		var ability: Ability = effect.ability
 		match ability.effect:
@@ -201,12 +242,20 @@ func _apply_ability_modifiers() -> void:
 				speed_mult *= ability.magnitude
 			Ability.Effect.STEADFAST:
 				damage_mult *= ability.magnitude
+			Ability.Effect.DITCH:
+				ranged_mult *= ability.magnitude
+			Ability.Effect.ADVANCE:
+				push = maxf(push, ability.magnitude)
 	speed_multiplier = speed_mult
 	damage_taken_multiplier = damage_mult
+	ranged_damage_taken_multiplier = ranged_mult
+	melee_push = push
 	for child in _retinue.get_children():
 		if child is Recruit:
 			child.speed_multiplier = speed_mult
 			child.damage_taken_multiplier = damage_mult
+			child.ranged_damage_taken_multiplier = ranged_mult
+			child.melee_push = push
 
 # Swing at the nearest targetable enemy in reach, on cooldown.
 # Living enemies outrank structures (e.g. a city gate).
@@ -237,6 +286,13 @@ func _auto_attack() -> void:
 	if target != null:
 		_attack_timer = attack_interval
 		target.take_damage(attack_damage)
+		# Advance: the warlord's own hits shove the enemy back too.
+		if melee_push > 0.0 and is_instance_valid(target) \
+				and not target.is_structure():
+			var offset: Vector2 = target.global_position - global_position
+			var dir := offset.normalized() if offset.length() > 0.0 \
+					else Vector2.RIGHT
+			target.move_and_collide(dir * melee_push)
 
 func _on_recruit_died(_recruit: Combatant) -> void:
 	army_size -= 1

@@ -184,6 +184,7 @@ func _fight(target: Combatant) -> Vector2:
 		if _attack_timer == 0.0:
 			_attack_timer = attack_interval
 			target.take_damage(attack_damage)
+			_push_target(target)
 		return Vector2.ZERO
 	var ranged_reach: float = ranged_range + target.target_radius()
 	if ranged_range > 0.0 and dist <= ranged_reach:
@@ -200,6 +201,23 @@ func _fight(target: Combatant) -> Vector2:
 	if ranged_only:
 		return _velocity_toward(target.global_position, ranged_reach)
 	return _velocity_toward(target.global_position, reach)
+
+# Advance: while active, each melee hit also shoves the target backwards.
+func _push_target(target: Combatant) -> void:
+	if melee_push <= 0.0 or not is_instance_valid(target) or target.is_structure():
+		return
+	var offset: Vector2 = target.global_position - global_position
+	var dir := offset.normalized() if offset.length() > 0.0 else Vector2.RIGHT
+	target.move_and_collide(dir * melee_push)
+
+# Draw Out: an enemy warlord's feigned retreat forces this recruit to
+# chase the given lure; the normal duel commitment keeps it following.
+func force_engage(target: Combatant) -> void:
+	if target == null or not is_instance_valid(target) or target == self:
+		return
+	_release_combat_target()
+	_combat_target = target
+	target.engaged_count += 1
 
 func _loose_projectile(target: Combatant) -> void:
 	var arrow := Arrow.new()
