@@ -59,13 +59,21 @@ var _attack_timer: float = 0.0
 
 func _ready() -> void:
 	super._ready()
+	add_to_group("warlords")
 	health = max_health
 	for child in _retinue.get_children():
 		if child is Recruit:
-			child.team = team
-			child.set_follow_target(self)
-			child.died.connect(_on_recruit_died)
-			army_size += 1
+			add_recruit(child)
+
+# Puts a recruit under this warlord's command: retinue recruits placed in
+# the scene at start, and garrison recruits mustered by a Village.
+func add_recruit(recruit: Recruit) -> void:
+	recruit.team = team
+	recruit.set_follow_target(self)
+	recruit.died.connect(_on_recruit_died)
+	army_size += 1
+	if recruit.get_parent() != _retinue:
+		recruit.reparent.call_deferred(_retinue)
 
 # Untouchable while the retinue lives; fair game once it is defeated.
 func can_be_targeted() -> bool:
