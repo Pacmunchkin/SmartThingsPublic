@@ -70,15 +70,26 @@ func _process(_delta: float) -> void:
 	if _commander != null:
 		warlord = _commander.get_selected_warlord()
 	if warlord == null:
-		_info_label.text = "NO WARLORD"
+		var inbound: float = 0.0
+		if _commander != null:
+			inbound = _commander.get_next_longship_time()
+		if inbound > 0.0:
+			_info_label.text = "NO WARLORD — LONGSHIP INBOUND %ds" % ceili(inbound)
+		else:
+			_info_label.text = "NO WARLORD"
 		for i in 3:
 			_slot_names[i].text = "-"
 			_slot_status[i].text = ""
 		return
+	var next_ship: float = 0.0
+	if _commander != null:
+		next_ship = _commander.get_next_longship_time()
 	_info_label.text = "%s  |  RENOWN %d/%d  |  HP %d/%d  |  ARMY %d/%d" % [
 			warlord.warlord_name, warlord.renown, Warlord.RENOWN_MAX,
 			roundi(warlord.health), roundi(warlord.max_health),
 			warlord.army_size, warlord.max_retinue]
+	if next_ship > 0.0:
+		_info_label.text += "  |  LONGSHIP %ds" % ceili(next_ship)
 	for i in 3:
 		if not warlord.is_slot_unlocked(i):
 			_slot_names[i].text = "LOCKED"

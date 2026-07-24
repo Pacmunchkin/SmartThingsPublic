@@ -44,10 +44,14 @@ var _type_choice: Array[int] = []     # 0 = keep default, else unit_types[i-1]
 var _ability_choice: Array[int] = []  # 0 = keep current, else abilities[i-1]
 
 # Church ability-pick mode (see open_ability_pick): set while choosing a
-# single ability for one newly unlocked slot, UNPAUSED.
+# single ability for one newly unlocked slot, UNPAUSED. With _single_setup
+# on it is instead the longship ARRIVAL loadout (unit type + first
+# ability) for a freshly landed replacement warlord.
 var _single_warlord: Warlord = null
 var _single_slot: int = -1
 var _single_choice: int = 0
+var _single_setup: bool = false
+var _single_type_choice: int = 0
 
 var _subtitle: Label
 var _type_label: Label
@@ -82,12 +86,28 @@ func open_ability_pick(warlord: Warlord, slot: int) -> void:
 	_single_warlord = warlord
 	_single_slot = slot
 	_single_choice = 0
+	_single_setup = false
+	visible = true
+	_refresh()
+
+# Called by WarlordCommander when a replacement lands by longship:
+# choose their unit type and first ability. Unpaused, d-pad driven.
+func open_warlord_setup(warlord: Warlord) -> void:
+	if visible or warlord == null:
+		return
+	_single_warlord = warlord
+	_single_slot = -1
+	_single_choice = 0
+	_single_setup = true
+	_single_type_choice = 0
+	_row = 0
 	visible = true
 	_refresh()
 
 func _close_ability_pick() -> void:
 	_single_warlord = null
 	_single_slot = -1
+	_single_setup = false
 	visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -98,7 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _single_warlord != null and event is InputEventJoypadMotion:
 		return
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		if _single_warlord == null:
+		if _single_warlord == null or _single_setup:
 			_row = 1 - _row
 			_refresh()
 	elif event.is_action_pressed("ui_left"):
@@ -117,7 +137,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _cycle(direction: int) -> void:
 	if _single_warlord != null:
-		_single_choice = posmod(_single_choice + direction, abilities.size() + 1)
+		if _single_setup and _row == 0:
+			_single_type_choice = posmod(
+					_single_type_choice + direction, unit_types.size() + 1)
+		else:
+			_single_choice = posmod(
+					_single_choice + direction, abilities.size() + 1)
 	elif _row == 0:
 		_type_choice[_index] = posmod(
 				_type_choice[_index] + direction, unit_types.size() + 1)
@@ -128,9 +153,18 @@ func _cycle(direction: int) -> void:
 
 func _confirm() -> void:
 	if _single_warlord != null:
-		if _single_choice > 0 and is_instance_valid(_single_warlord):
-			_single_warlord.set_slot_ability(
-					_single_slot, abilities[_single_choice - 1])
+		if is_instance_valid(_single_warlord):
+			if _single_setup:
+				var chosen_type: UnitType = null
+				if _single_type_choice > 0:
+					chosen_type = unit_types[_single_type_choice - 1]
+				var chosen_ability: Ability = null
+				if _single_choice > 0:
+					chosen_ability = abilities[_single_choice - 1]
+				_single_warlord.set_loadout(chosen_type, chosen_ability)
+			elif _single_choice > 0:
+				_single_warlord.set_slot_ability(
+						_single_slot, abilities[_single_choice - 1])
 		_close_ability_pick()
 		return
 	if _index < _warlords.size() - 1:
@@ -199,6 +233,19 @@ func _refresh() -> void:
 	if _single_warlord != null:
 		if not is_instance_valid(_single_warlord):
 			_close_ability_pick()
+			return
+		if _single_setup:
+			_subtitle.text = "%s lands by longship — choose their loadout" \
+					% _single_warlord.warlord_name
+			_type_label.visible = true
+			var type_pick := "Levy (default)"
+			if _single_type_choice > 0:
+				type_pick = unit_types[_single_type_choice - 1].display_name
+			var ability_pick := "(none yet)"
+			if _single_choice > 0:
+				ability_pick = abilities[_single_choice - 1].display_name
+			_type_label.text = "%s Unit Type:     < %s >" % [_marker(0), type_pick]
+			_ability_label.text = "%s First Ability: < %s >" % [_marker(1), ability_pick]
 			return
 		_subtitle.text = "%s — choose a new ability  |  RENOWN %d" % [
 				_single_warlord.warlord_name, _single_warlord.renown]

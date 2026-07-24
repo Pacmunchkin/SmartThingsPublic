@@ -43,11 +43,19 @@
 # doubles as a modifier, warlord X is selected on RELEASE of the X button:
 # a plain tap still selects, but a hold used for an ability does not.
 #
-# PERMADEATH: when a warlord dies its slot is cleared and its select button
-# goes dead for the rest of the run. If the selected warlord dies, selection
-# jumps to the first surviving warlord (A, B, X, Y order). If none survive,
-# nothing is selected and the camera stays where it is (game over screen is
-# a future iteration).
+# PERMADEATH + THE LONGSHIP: a dead warlord is gone forever, but their
+# slot is not — replacement_delay seconds after a death, a fresh warlord
+# (renown 0, random Norse name, no unit type or abilities yet) lands at
+# the Longship Dock, takes the empty slot, and the arrival loadout menu
+# opens (see war_council.gd open_warlord_setup). The cost of death is the
+# veteran's renown, the wait, and the march back from the shore.
+# INSPECTOR SETUP for replacements: drag warlord.tscn into "Warlord
+# Scene" and a Marker2D (place it at the shoreline) into "Longship Dock".
+# Leave Warlord Scene empty to disable replacements (true permadeath).
+#
+# If the selected warlord dies, selection jumps to the first surviving
+# warlord (A, B, X, Y order); with none alive, nothing is selected until
+# the next longship lands.
 # =============================================================================
 
 extends Node2D
@@ -58,10 +66,19 @@ class_name WarlordCommander
 @export var warlord_x: Warlord
 @export var warlord_y: Warlord
 
+# --- Longship replacements ---------------------------------------------------
+# Drag warlord.tscn here; empty = no replacements (true permadeath).
+@export var warlord_scene: PackedScene
+# Marker2D at the shoreline where replacements land.
+@export var longship_dock: Node2D
+# Seconds between a death and the replacement's arrival — the time cost.
+@export var replacement_delay: float = 60.0
+
 @onready var _camera: Camera2D = $Camera2D
 
 var _selected: Warlord = null
 var _x_hold_used: bool = false  # X was used as an ability modifier
+var _pending_longships: Dictionary = {}  # slot key "a"/"b"/"x"/"y" -> seconds
 
 func _ready() -> void:
 	for warlord in [warlord_a, warlord_b, warlord_x, warlord_y]:
@@ -96,7 +113,8 @@ func _try_ability(slot: int) -> void:
 	if _selected != null:
 		_selected.activate_ability(slot)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_tick_longships(delta)
 	# Camera stays snapped to the selected warlord (no smoothing, no tween).
 	if _selected != null:
 		_camera.global_position = _selected.global_position
@@ -104,6 +122,50 @@ func _process(_delta: float) -> void:
 # Used by hud.gd; null when no warlord survives.
 func get_selected_warlord() -> Warlord:
 	return _selected
+
+# Used by hud.gd: seconds until the next longship lands, 0 if none due.
+func get_next_longship_time() -> float:
+	var soonest: float = 0.0
+	for time_left in _pending_longships.values():
+		if soonest == 0.0 or time_left < soonest:
+			soonest = time_left
+	return soonest
+
+# --- Longship replacements ---------------------------------------------------
+
+func _tick_longships(delta: float) -> void:
+	if warlord_scene == null or _pending_longships.is_empty():
+		return
+	for key in _pending_longships.keys():
+		_pending_longships[key] -= delta
+		if _pending_longships[key] <= 0.0:
+			_spawn_replacement(key)
+
+func _spawn_replacement(key: String) -> void:
+	_pending_longships.erase(key)
+	var warlord := warlord_scene.instantiate() as Warlord
+	if warlord == null:
+		return
+	# Player-driven, but a fresh face: renown 0 (one ability slot, no
+	# buffs), random name, no unit type until the arrival loadout is set.
+	var controller := PlayerController.new()
+	controller.name = "Controller"
+	warlord.add_child(controller)
+	warlord.renown = 0
+	add_child(warlord)
+	if longship_dock != null:
+		warlord.global_position = longship_dock.global_position
+	warlord.died.connect(_on_warlord_died)
+	match key:
+		"a": warlord_a = warlord
+		"b": warlord_b = warlord
+		"x": warlord_x = warlord
+		"y": warlord_y = warlord
+	if _selected == null:
+		_select(warlord)
+	var council := get_tree().get_first_node_in_group("war_council") as WarCouncil
+	if council != null:
+		council.open_warlord_setup(warlord)
 
 func _select(warlord: Warlord) -> void:
 	if warlord == null or warlord == _selected:
@@ -115,15 +177,20 @@ func _select(warlord: Warlord) -> void:
 	_camera.global_position = _selected.global_position
 
 func _on_warlord_died(combatant: Combatant) -> void:
-	# Permadeath: clear the slot so its select button does nothing.
+	# Permadeath: clear the slot so its select button does nothing —
+	# and summon the next longship for it.
 	if combatant == warlord_a:
 		warlord_a = null
+		_pending_longships["a"] = replacement_delay
 	if combatant == warlord_b:
 		warlord_b = null
+		_pending_longships["b"] = replacement_delay
 	if combatant == warlord_x:
 		warlord_x = null
+		_pending_longships["x"] = replacement_delay
 	if combatant == warlord_y:
 		warlord_y = null
+		_pending_longships["y"] = replacement_delay
 	if _selected == combatant:
 		_selected = null
 		for survivor in [warlord_a, warlord_b, warlord_x, warlord_y]:
