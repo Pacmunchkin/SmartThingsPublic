@@ -218,14 +218,18 @@ or flesh.
   provisions → speed, rest/healer/herbs → healing, silver → longship
   arrivals, roads/fords/boats/rear-entrances → routes. **Survivability (HP,
   armour, healing) comes ONLY from this channel** — gear and recovery.
-- **Morale / reputation channel** — omens, a raven, a skald's song, a
-  heartening sacrifice, a recovered banner → **renown / a temporary "fight
-  harder"**, *never* survivability. This is where Norse belief lives without
-  magic: belief moved men's courage (real), it did not thicken their mail.
-  (The raven banner / Warlord Leads already works this way.)
-Rule: **belief can change the spirit (renown/morale), never the body.**
-Re-skinning a source is free — the mechanics are identical whether the
-fiction is "Týr's blessing" or "a cache of Frankish mail."
+- **Morale channel** — omens, a raven, a skald's song, a heartening
+  sacrifice, a recovered banner → a **temporary buff to attack + defence**
+  (heartened men fight harder and hold the line), plus renown. **No separate
+  "morale" variable** — "morale" is just the flavour label for a buff that
+  applies the existing damage/defence multipliers. This is where Norse
+  belief lives without magic: it moved men's courage (real), it did not
+  thicken their mail.
+Rule: **belief improves how hard men fight (attack/defence) and their
+renown; it never raises max HP or heals — health comes only from the
+material channel (gear, food, rest).** Re-skinning a source is free — the
+mechanics are identical whether the fiction is "a sacrifice before battle"
+or "a cache of Frankish mail."
 
 **Reward taxonomy** — what a discovery can grant, what it serves, and how it
 usually wants to be tuned:
@@ -243,7 +247,7 @@ usually wants to be tuned:
 | Useful information | Scouting | Permanent or timed reveal | Local guide, watchtower, captured scout |
 | Speed a new warlord | Death economy | One-time | Silver hoard (plunder pays the crew) |
 | Renown for a new warlord | Death economy | One-time | Recovered banner — the named legacy heartens the men |
-| Morale ("fight harder") | Combat (psych.) | Temporary | Omen, raven, skald's song, a heartening sacrifice |
+| Morale (= attack + defence) | Combat | Temporary | Omen, raven, skald's song, a heartening sacrifice |
 | Village production boost | Economy | Temporary or capped perm | Captured tools/livestock/seed, a mill |
 | Lore & flavour | Worldbuilding | n/a | Runestones, ruins, captured monks, skalds |
 
