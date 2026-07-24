@@ -73,6 +73,19 @@ class_name Warlord
 @export var ability_left: Ability
 @export var ability_right: Ability
 
+# --- Renown -----------------------------------------------------------------
+# Morale/veterancy, earned by DEEDS (never by waiting): +1 for conquering
+# a village, defeating a burh garrison, destroying a city gate, or killing
+# an enemy warlord. Levels 0..RENOWN_MAX. Longship replacements will start
+# at 0; set your starting warlords to 2 in the Inspector.
+# Per level: warlord +10% max health; retinue +5% max health, +2% speed.
+@export var renown: int = 0
+
+const RENOWN_MAX: int = 5
+const RENOWN_WARLORD_HEALTH: float = 0.10   # warlord max HP per level
+const RENOWN_RETINUE_HEALTH: float = 0.05   # retinue max HP per level
+const RENOWN_RETINUE_SPEED: float = 0.02    # retinue speed per level
+
 # --- Selection --------------------------------------------------------------
 # Set by WarlordCommander. Read by PlayerController: only the selected
 # player warlord responds to the stick. Meaningless for AI warlords.
@@ -90,12 +103,16 @@ var _controller: WarlordController = null
 var _ability_cooldowns: Array[float] = [0.0, 0.0, 0.0]  # up, left, right
 var _active_effects: Array[Dictionary] = []  # {ability: Ability, time_left: float}
 var _scan_timer: float = 0.0
+var _base_max_health: float = 65.0  # pre-renown max health
 
 @onready var _retinue: Node2D = $Retinue
 
 func _ready() -> void:
 	super._ready()
 	add_to_group("warlords")
+	renown = clampi(renown, 0, RENOWN_MAX)
+	_base_max_health = max_health
+	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)
 	health = max_health
 	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
 	_controller = find_child("*Controller", false, false) as WarlordController
@@ -109,11 +126,38 @@ func add_recruit(recruit: Recruit) -> void:
 	recruit.team = team
 	if unit_type != null:
 		recruit.apply_unit_type(unit_type)
+	recruit.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
 	recruit.set_follow_target(self)
 	recruit.died.connect(_on_recruit_died)
 	army_size += 1
 	if recruit.get_parent() != _retinue:
 		recruit.reparent.call_deferred(_retinue)
+
+# Renown credit for my own hits flows to me.
+func get_credited_warlord() -> Warlord:
+	return self
+
+# --- Renown -----------------------------------------------------------------
+
+func add_renown(amount: int) -> void:
+	var new_renown := clampi(renown + amount, 0, RENOWN_MAX)
+	if new_renown == renown:
+		return
+	renown = new_renown
+	# Warlord max health rises with reputation; the gain heals.
+	var old_max := max_health
+	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)
+	health += maxf(max_health - old_max, 0.0)
+	# The retinue's trust rises with it.
+	for child in _retinue.get_children():
+		if child is Recruit:
+			child.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
+
+# Called by Combatant._award_kill_credit on the victim's death.
+# Only the great deeds count — recruits fall uncounted.
+func on_enemy_killed(victim: Combatant) -> void:
+	if victim is Warlord or victim is CityGate:
+		add_renown(1)
 
 # Untouchable while the retinue lives — unless leading from the front
 # (Warlord Leads active). Fair game once the retinue is defeated.
@@ -271,9 +315,11 @@ func _apply_ability_modifiers() -> void:
 	damage_taken_multiplier = damage_mult
 	ranged_damage_taken_multiplier = ranged_mult
 	melee_push = push
+	# Renown: a confident retinue runs in faster (stacks with Charge).
+	var retinue_speed := speed_mult * (1.0 + RENOWN_RETINUE_SPEED * renown)
 	for child in _retinue.get_children():
 		if child is Recruit:
-			child.speed_multiplier = speed_mult
+			child.speed_multiplier = retinue_speed
 			child.damage_taken_multiplier = damage_mult
 			child.ranged_damage_taken_multiplier = ranged_mult
 			child.melee_push = push
@@ -310,7 +356,7 @@ func _auto_attack() -> void:
 		_scan_timer = TARGET_SCAN_INTERVAL  # idle: wait before rescanning
 		return
 	_attack_timer = attack_interval
-	target.take_damage(attack_damage)
+	target.take_damage(attack_damage, self)
 	# Advance: the warlord's own hits shove the enemy back too.
 	if melee_push > 0.0 and is_instance_valid(target) \
 			and not target.is_structure():

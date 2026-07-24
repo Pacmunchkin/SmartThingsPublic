@@ -73,10 +73,21 @@ func _enroll(recruit: Recruit) -> void:
 	recruit.died.connect(_on_recruit_died)
 	garrison_size += 1
 
-func _on_recruit_died(_recruit: Combatant) -> void:
+func _on_recruit_died(recruit: Combatant) -> void:
 	garrison_size -= 1
 	if garrison_size <= 0:
 		_open_barrier()
+		_award_renown(recruit)
+
+# Defeating a burh is a deed of renown, credited to the warlord whose
+# side felled the last defender.
+func _award_renown(last_defender: Combatant) -> void:
+	var killer := last_defender.last_attacker
+	if killer == null or not is_instance_valid(killer):
+		return
+	var credited := killer.get_credited_warlord()
+	if credited != null and is_instance_valid(credited) and credited.team != team:
+		credited.add_renown(1)
 
 # Defeat is permanent: hide the wall and switch off its collision so the
 # choke point becomes passable.

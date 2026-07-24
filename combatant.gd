@@ -25,6 +25,9 @@ signal died(combatant: Combatant)
 var health: float = 1.0
 var engaged_count: int = 0  # enemies currently targeting me (for pairing)
 
+# Last combatant to damage me — used for renown kill/conquest credit.
+var last_attacker: Combatant = null
+
 # Ability modifiers, set by an owning Warlord's active abilities
 # (see warlord.gd): Steadfast scales all damage taken, Ditch scales ranged
 # damage taken, Charge scales speed, Advance shoves on melee hits.
@@ -61,15 +64,32 @@ func is_structure() -> bool:
 func target_radius() -> float:
 	return 0.0
 
-func take_damage(amount: float) -> void:
+# The warlord who gets renown credit for this combatant's deeds:
+# a warlord credits itself, a retinue recruit credits its warlord,
+# garrison recruits and structures credit nobody.
+func get_credited_warlord() -> Warlord:
+	return null
+
+func take_damage(amount: float, attacker: Combatant = null) -> void:
+	if attacker != null:
+		last_attacker = attacker
 	health -= amount * damage_taken_multiplier
 	if health <= 0.0:
 		_die()
 
 # Damage from projectiles (arrows, javelins) — Ditch resists this channel.
-func take_ranged_damage(amount: float) -> void:
-	take_damage(amount * ranged_damage_taken_multiplier)
+func take_ranged_damage(amount: float, attacker: Combatant = null) -> void:
+	take_damage(amount * ranged_damage_taken_multiplier, attacker)
 
 func _die() -> void:
+	_award_kill_credit()
 	died.emit(self)
 	queue_free()
+
+# Renown: tell the killer's warlord what fell (see warlord.on_enemy_killed).
+func _award_kill_credit() -> void:
+	if last_attacker == null or not is_instance_valid(last_attacker):
+		return
+	var credited := last_attacker.get_credited_warlord()
+	if credited != null and is_instance_valid(credited) and credited.team != team:
+		credited.on_enemy_killed(self)

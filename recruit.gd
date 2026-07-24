@@ -59,12 +59,30 @@ var _post_position: Vector2
 var _attack_timer: float = 0.0
 var _ranged_timer: float = 0.0
 var _scan_timer: float = 0.0
+var _base_max_health: float = 10.0  # pre-renown max health (see below)
 
 func _ready() -> void:
 	super._ready()
 	health = max_health
+	_base_max_health = max_health
 	_post_position = global_position
 	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
+
+# Renown credit flows to my warlord (null for garrison recruits).
+func get_credited_warlord() -> Warlord:
+	if follow_target != null and is_instance_valid(follow_target):
+		return follow_target as Warlord
+	return null
+
+# Renown: the warlord's reputation raises the retinue's max health.
+# Gains heal the difference; losses (never happens in v1) just clamp.
+func apply_health_bonus(multiplier: float) -> void:
+	var old_max := max_health
+	max_health = _base_max_health * multiplier
+	if max_health > old_max:
+		health += max_health - old_max
+	else:
+		health = minf(health, max_health)
 
 # Called by the owning Warlord: this recruit fights as the given type
 # (Seaxes, Axes, Spears, Shield & Sword, Bows — see unit_type.gd).
@@ -72,6 +90,7 @@ func apply_unit_type(unit_type: UnitType) -> void:
 	move_speed = unit_type.move_speed
 	max_health = unit_type.max_health
 	health = unit_type.max_health
+	_base_max_health = unit_type.max_health
 	attack_damage = unit_type.attack_damage
 	attack_interval = unit_type.attack_interval
 	attack_range = unit_type.attack_range
@@ -195,7 +214,7 @@ func _fight(target: Combatant) -> Vector2:
 	if dist <= reach and not ranged_only:
 		if _attack_timer == 0.0:
 			_attack_timer = attack_interval
-			target.take_damage(attack_damage)
+			target.take_damage(attack_damage, self)
 			_push_target(target)
 		return Vector2.ZERO
 	var ranged_reach: float = ranged_range + target.target_radius()
@@ -236,6 +255,7 @@ func _loose_projectile(target: Combatant) -> void:
 	arrow.target = target
 	arrow.damage = ranged_damage
 	arrow.speed = projectile_speed
+	arrow.shooter = self
 	get_tree().current_scene.add_child(arrow)
 	arrow.global_position = global_position
 

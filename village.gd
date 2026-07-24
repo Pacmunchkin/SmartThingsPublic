@@ -94,6 +94,7 @@ func _try_capture() -> void:
 	if conqueror == null:
 		return
 	team = conqueror.team
+	conqueror.add_renown(1)  # a village taken is a deed of renown
 
 # --- Production -------------------------------------------------------------
 

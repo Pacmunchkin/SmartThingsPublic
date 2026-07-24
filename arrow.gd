@@ -13,6 +13,7 @@ class_name Arrow
 var target: Combatant = null
 var damage: float = 0.0
 var speed: float = 400.0
+var shooter: Combatant = null  # for renown kill credit; battlements leave null
 
 func _physics_process(delta: float) -> void:
 	if target == null or not is_instance_valid(target):
@@ -22,7 +23,9 @@ func _physics_process(delta: float) -> void:
 	rotation = to_target.angle()
 	var step: float = speed * delta
 	if to_target.length() <= step:
-		target.take_ranged_damage(damage)
+		var valid_shooter := shooter if shooter != null \
+				and is_instance_valid(shooter) else null
+		target.take_ranged_damage(damage, valid_shooter)
 		queue_free()
 		return
 	global_position += to_target.normalized() * step
