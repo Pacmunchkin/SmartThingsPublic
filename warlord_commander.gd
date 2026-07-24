@@ -16,6 +16,7 @@
 # ├── Village (village.tscn)       <- any number of village instances
 # ├── Burh (burh.tscn)             <- fortifications at choke points
 # ├── City (city.tscn)             <- walled city with gate + battlements
+# ├── Church (church.tscn)         <- sanctuary: heals, hosts ability picks
 # ├── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
 #                                     army size, ability cooldowns
 # └── WarCouncil (CanvasLayer)     <- war_council.gd: pre-level loadout

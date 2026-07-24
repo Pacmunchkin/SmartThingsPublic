@@ -80,10 +80,16 @@ func _process(_delta: float) -> void:
 			roundi(warlord.health), roundi(warlord.max_health),
 			warlord.army_size, warlord.max_retinue]
 	for i in 3:
+		if not warlord.is_slot_unlocked(i):
+			_slot_names[i].text = "LOCKED"
+			_slot_status[i].text = "RENOWN %d" % Warlord.ABILITY_SLOT_RENOWN[i]
+			_slot_status[i].modulate = Color(1, 1, 1, 0.4)
+			continue
 		var ability := warlord.get_ability(i)
 		if ability == null:
 			_slot_names[i].text = "(empty)"
-			_slot_status[i].text = ""
+			_slot_status[i].text = "VISIT A CHURCH"
+			_slot_status[i].modulate = Color(0.6, 0.8, 1.0)
 			continue
 		_slot_names[i].text = ability.display_name
 		var active := warlord.get_ability_active_time(ability)

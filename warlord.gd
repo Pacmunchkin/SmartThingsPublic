@@ -86,6 +86,11 @@ const RENOWN_WARLORD_HEALTH: float = 0.10   # warlord max HP per level
 const RENOWN_RETINUE_HEALTH: float = 0.05   # retinue max HP per level
 const RENOWN_RETINUE_SPEED: float = 0.02    # retinue speed per level
 
+# Renown needed to USE each ability slot (up, left, right). Locked slots
+# ignore activation and show as LOCKED on the HUD. Newly unlocked slots
+# are filled by visiting a Church (see church.gd / war_council.gd).
+const ABILITY_SLOT_RENOWN: Array[int] = [0, 2, 4]
+
 # --- Selection --------------------------------------------------------------
 # Set by WarlordCommander. Read by PlayerController: only the selected
 # player warlord responds to the stick. Meaningless for AI warlords.
@@ -202,6 +207,8 @@ func _physics_process(delta: float) -> void:
 
 # Called by WarlordCommander. Slots: 0 = up, 1 = left, 2 = right.
 func activate_ability(slot: int) -> void:
+	if not is_slot_unlocked(slot):
+		return
 	var ability := get_ability(slot)
 	if ability == null or _ability_cooldowns[slot] > 0.0:
 		return
@@ -281,6 +288,31 @@ func get_ability(slot: int) -> Ability:
 		1: return ability_left
 		2: return ability_right
 	return null
+
+func is_slot_unlocked(slot: int) -> bool:
+	return renown >= ABILITY_SLOT_RENOWN[slot]
+
+# First slot unlocked by renown but with no ability assigned (-1 if none).
+# The Church offers to fill this slot when the warlord visits.
+func next_empty_unlocked_slot() -> int:
+	for slot in 3:
+		if is_slot_unlocked(slot) and get_ability(slot) == null:
+			return slot
+	return -1
+
+# Called by WarCouncil when the player picks an ability at a Church.
+func set_slot_ability(slot: int, ability: Ability) -> void:
+	match slot:
+		0: ability_up = ability
+		1: ability_left = ability
+		2: ability_right = ability
+
+# Church sanctuary healing: restore this warlord and their retinue.
+func heal_army(amount: float) -> void:
+	health = minf(health + amount, max_health)
+	for child in _retinue.get_children():
+		if child is Recruit:
+			child.health = minf(child.health + amount, child.max_health)
 
 # --- UI queries (used by hud.gd) --------------------------------------------
 

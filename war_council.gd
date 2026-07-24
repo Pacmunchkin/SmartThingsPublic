@@ -43,6 +43,12 @@ var _row: int = 0     # 0 = unit type row, 1 = ability row
 var _type_choice: Array[int] = []     # 0 = keep default, else unit_types[i-1]
 var _ability_choice: Array[int] = []  # 0 = keep current, else abilities[i-1]
 
+# Church ability-pick mode (see open_ability_pick): set while choosing a
+# single ability for one newly unlocked slot, UNPAUSED.
+var _single_warlord: Warlord = null
+var _single_slot: int = -1
+var _single_choice: int = 0
+
 var _subtitle: Label
 var _type_label: Label
 var _ability_label: Label
@@ -50,6 +56,7 @@ var _ability_label: Label
 func _ready() -> void:
 	# Keep running while the rest of the tree is paused.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("war_council")
 	_commander = get_parent() as WarlordCommander
 	if _commander != null:
 		for warlord in [_commander.warlord_a, _commander.warlord_b,
@@ -66,12 +73,34 @@ func _ready() -> void:
 	_build_ui()
 	_refresh()
 
+# Called by a Church: pick one ability for one newly unlocked slot.
+# The game keeps running — the stick still moves the warlord; only the
+# d-pad / keyboard drive this menu.
+func open_ability_pick(warlord: Warlord, slot: int) -> void:
+	if visible or warlord == null:
+		return
+	_single_warlord = warlord
+	_single_slot = slot
+	_single_choice = 0
+	visible = true
+	_refresh()
+
+func _close_ability_pick() -> void:
+	_single_warlord = null
+	_single_slot = -1
+	visible = false
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
+	# Unpaused church pick: ignore stick motion so walking doesn't cycle
+	# the menu — d-pad and keyboard only.
+	if _single_warlord != null and event is InputEventJoypadMotion:
+		return
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		_row = 1 - _row
-		_refresh()
+		if _single_warlord == null:
+			_row = 1 - _row
+			_refresh()
 	elif event.is_action_pressed("ui_left"):
 		_cycle(-1)
 	elif event.is_action_pressed("ui_right"):
@@ -87,7 +116,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- Menu flow --------------------------------------------------------------
 
 func _cycle(direction: int) -> void:
-	if _row == 0:
+	if _single_warlord != null:
+		_single_choice = posmod(_single_choice + direction, abilities.size() + 1)
+	elif _row == 0:
 		_type_choice[_index] = posmod(
 				_type_choice[_index] + direction, unit_types.size() + 1)
 	else:
@@ -96,6 +127,12 @@ func _cycle(direction: int) -> void:
 	_refresh()
 
 func _confirm() -> void:
+	if _single_warlord != null:
+		if _single_choice > 0 and is_instance_valid(_single_warlord):
+			_single_warlord.set_slot_ability(
+					_single_slot, abilities[_single_choice - 1])
+		_close_ability_pick()
+		return
 	if _index < _warlords.size() - 1:
 		_index += 1
 		_row = 0
@@ -104,6 +141,9 @@ func _confirm() -> void:
 	_apply_and_start()
 
 func _back() -> void:
+	if _single_warlord != null:
+		_close_ability_pick()  # decline; the church offers again on return
+		return
 	if _index > 0:
 		_index -= 1
 		_row = 0
@@ -156,6 +196,19 @@ func _build_ui() -> void:
 	box.add_child(footer)
 
 func _refresh() -> void:
+	if _single_warlord != null:
+		if not is_instance_valid(_single_warlord):
+			_close_ability_pick()
+			return
+		_subtitle.text = "%s — choose a new ability  |  RENOWN %d" % [
+				_single_warlord.name, _single_warlord.renown]
+		_type_label.visible = false
+		var pick_name := "(decide later)"
+		if _single_choice > 0:
+			pick_name = abilities[_single_choice - 1].display_name
+		_ability_label.text = "> New Ability:  < %s >" % pick_name
+		return
+	_type_label.visible = true
 	var warlord := _warlords[_index]
 	_subtitle.text = "%s  (%d of %d)  |  RENOWN %d" % [
 			warlord.name, _index + 1, _warlords.size(), warlord.renown]
