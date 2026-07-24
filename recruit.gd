@@ -6,7 +6,17 @@
 # │                                   Set Size to 16x16 and Position to -8,-8
 # │                                   so it is centered; Color = gray.
 # │                                   (Swap for a Sprite2D when art is ready.)
-# └── CollisionShape2D             <- physics collision shape
+# ├── CollisionShape2D             <- physics collision shape
+# └── NavigationAgent2D            <- OPTIONAL. Add this to make recruits
+#                                     path AROUND walls/burhs/city instead
+#                                     of walking into them. Needs a baked
+#                                     navmesh in the level (a TileMapLayer
+#                                     with TileSet navigation, or a
+#                                     NavigationRegion2D). With no agent
+#                                     node, recruits fall back to straight
+#                                     lines (pre-pathfinding behavior).
+#                                     Recommended: enable "avoidance" OFF
+#                                     so recruits still scrum/shove.
 #
 # Extends Combatant (combatant.gd) for team / health / died / pairing state.
 #
@@ -51,6 +61,12 @@ var ranged_only: bool = false
 # of idle units, scanning the combatants group every frame is the main CPU
 # cost. Fighting itself is not throttled.
 const TARGET_SCAN_INTERVAL: float = 0.25
+
+# Pathfinding only kicks in beyond this distance; inside it (the scrum,
+# the final approach) a straight line is cheaper and looks identical.
+const PATH_NEAR_DISTANCE: float = 64.0
+
+@onready var _nav_agent: NavigationAgent2D = get_node_or_null("NavigationAgent2D")
 
 var follow_target: Node2D = null
 
@@ -261,9 +277,22 @@ func _loose_projectile(target: Combatant) -> void:
 
 func _velocity_toward(point: Vector2, stop_at: float) -> Vector2:
 	var to_point: Vector2 = point - global_position
-	if to_point.length() <= stop_at:
+	var dist := to_point.length()
+	if dist <= stop_at:
 		return Vector2.ZERO
-	return to_point.normalized() * move_speed * speed_multiplier
+	# In the scrum, or with no navmesh agent: go straight (cheap, identical).
+	if dist <= PATH_NEAR_DISTANCE or _nav_agent == null:
+		return to_point.normalized() * move_speed * speed_multiplier
+	# Far: steer along the navigation path. Only re-target when the goal
+	# actually moved, so a walking warlord doesn't re-path every frame.
+	if _nav_agent.target_position.distance_to(point) > 16.0:
+		_nav_agent.target_position = point
+	var next := _nav_agent.get_next_path_position()
+	# Navmesh not baked yet / unreachable: fall back to straight line so
+	# units never freeze if a level forgot to bake navigation.
+	if global_position.distance_to(next) < 1.0:
+		return to_point.normalized() * move_speed * speed_multiplier
+	return global_position.direction_to(next) * move_speed * speed_multiplier
 
 func _die() -> void:
 	if _combat_target != null and is_instance_valid(_combat_target):

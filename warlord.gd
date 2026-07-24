@@ -6,6 +6,11 @@
 # ├── CollisionShape2D             <- physics collision shape
 # ├── HealthBar (Node2D)           <- health_bar.gd, position (0, 18)
 # ├── SelectionMarker (Node2D)     <- selection_marker.gd, position (0, -24)
+# ├── NavigationAgent2D            <- OPTIONAL. Only AI warlords use it (to
+# │                                   path around walls — see ai_controller
+# │                                   .gd). The PLAYER warlord ignores it:
+# │                                   it is stick-controlled and just
+# │                                   collides with walls via move_and_slide.
 # └── Retinue (Node2D)             <- plain Node2D; drop recruit.tscn
 #     ├── Recruit (recruit.tscn)      instances in here. Each recruit found
 #     └── ...                         here at scene start follows this

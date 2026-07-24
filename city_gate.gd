@@ -5,8 +5,14 @@
 # ├── ColorRect                    <- gray box wall/gate visual. Size it to
 # │                                   the gateway (e.g. 96x24) and offset it
 # │                                   so it is centered on the node.
-# └── CollisionShape2D             <- sized to seal the gateway; blocks all
-#                                     movement until the gate is destroyed
+# ├── CollisionShape2D             <- sized to seal the gateway; blocks all
+# │                                   movement until the gate is destroyed
+# └── NavigationObstacle2D         <- OPTIONAL (needs a baked navmesh). Give
+#                                     it "vertices" covering the gateway so
+#                                     units path around the sealed gate. No
+#                                     code needed to re-open it: the whole
+#                                     gate is freed at 0 health, taking this
+#                                     obstacle with it, so the navmesh opens.
 #
 # Extends Combatant so recruits and warlords can attack it, but it is a
 # STRUCTURE (is_structure below): it never moves, never fights back, and

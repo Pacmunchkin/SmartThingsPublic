@@ -8,7 +8,12 @@
 # └── Barrier (StaticBody2D)       <- physically blocks the choke point
 #     ├── CollisionShape2D         <- size/shape this in the editor to seal
 #     │                               the passage (add more shapes if needed)
-#     └── ColorRect                <- gray box visual for the wall
+#     ├── ColorRect                <- gray box visual for the wall
+#     └── NavigationObstacle2D     <- OPTIONAL (needs a baked navmesh). Give
+#                                     it "vertices" matching the blocked gap
+#                                     so units path AROUND the closed burh.
+#                                     It is freed when the burh is defeated,
+#                                     so the choke opens for pathing too.
 #
 # INSPECTOR SETUP: drag recruit.tscn into "Recruit Scene" and set
 # "Garrison Count" for how many defenders spawn at scene start.
@@ -89,10 +94,13 @@ func _award_renown(last_defender: Combatant) -> void:
 	if credited != null and is_instance_valid(credited) and credited.team != team:
 		credited.add_renown(1)
 
-# Defeat is permanent: hide the wall and switch off its collision so the
-# choke point becomes passable.
+# Defeat is permanent: hide the wall, switch off its collision, and free
+# any navigation obstacle so the choke point becomes passable — physically
+# and for pathfinding.
 func _open_barrier() -> void:
 	_barrier.hide()
 	for child in _barrier.get_children():
 		if child is CollisionShape2D or child is CollisionPolygon2D:
 			child.set_deferred("disabled", true)
+		elif child is NavigationObstacle2D:
+			child.queue_free()  # removing the obstacle re-opens the navmesh
