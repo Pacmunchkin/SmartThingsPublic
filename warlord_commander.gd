@@ -16,8 +16,10 @@
 # ├── Village (village.tscn)       <- any number of village instances
 # ├── Burh (burh.tscn)             <- fortifications at choke points
 # ├── City (city.tscn)             <- walled city with gate + battlements
-# └── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
+# ├── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
 #                                     army size, ability cooldowns
+# └── WarCouncil (CanvasLayer)     <- war_council.gd: pre-level loadout
+#                                     menu (pauses the game until done)
 #
 # Only player warlords go in the four commander slots below. Enemy warlords
 # are plain warlord.tscn instances with an AIController child and their

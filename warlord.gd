@@ -137,6 +137,19 @@ func add_recruit(recruit: Recruit) -> void:
 func get_credited_warlord() -> Warlord:
 	return self
 
+# Called by the War Council loadout menu before the level begins.
+# Null keeps the Inspector-assigned value. The chosen ability fills the
+# UP slot; Left/Right slots are untouched (renown unlocks them later).
+func set_loadout(new_unit_type: UnitType, first_ability: Ability) -> void:
+	if new_unit_type != null:
+		unit_type = new_unit_type
+		for child in _retinue.get_children():
+			if child is Recruit:
+				child.apply_unit_type(unit_type)
+				child.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
+	if first_ability != null:
+		ability_up = first_ability
+
 # --- Renown -----------------------------------------------------------------
 
 func add_renown(amount: int) -> void:
