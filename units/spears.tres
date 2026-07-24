@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitType" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://unit_type.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Spears"
+move_speed = 180.0
+max_health = 10.0
+attack_damage = 3.0
+attack_interval = 1.8
+attack_range = 24.0
+ranged_range = 120.0
+ranged_damage = 3.0
+ranged_interval = 4.0
+projectile_speed = 400.0
+ranged_only = false
