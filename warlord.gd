@@ -41,6 +41,11 @@
 extends Combatant
 class_name Warlord
 
+# --- Identity ---------------------------------------------------------------
+# Shown on the HUD and in menus. Leave empty to draw a random Norse name
+# from warlord_names.csv at scene start (see name_pool.gd).
+@export var warlord_name: String = ""
+
 # --- Movement ---------------------------------------------------------------
 @export var move_speed: float = 200.0  # pixels per second
 
@@ -115,6 +120,8 @@ var _base_max_health: float = 65.0  # pre-renown max health
 func _ready() -> void:
 	super._ready()
 	add_to_group("warlords")
+	if warlord_name.strip_edges().is_empty():
+		warlord_name = NamePool.draw()
 	renown = clampi(renown, 0, RENOWN_MAX)
 	_base_max_health = max_health
 	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)

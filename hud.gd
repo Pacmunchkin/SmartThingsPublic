@@ -76,7 +76,7 @@ func _process(_delta: float) -> void:
 			_slot_status[i].text = ""
 		return
 	_info_label.text = "%s  |  RENOWN %d/%d  |  HP %d/%d  |  ARMY %d/%d" % [
-			warlord.name, warlord.renown, Warlord.RENOWN_MAX,
+			warlord.warlord_name, warlord.renown, Warlord.RENOWN_MAX,
 			roundi(warlord.health), roundi(warlord.max_health),
 			warlord.army_size, warlord.max_retinue]
 	for i in 3:

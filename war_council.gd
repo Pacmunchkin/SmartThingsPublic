@@ -201,7 +201,7 @@ func _refresh() -> void:
 			_close_ability_pick()
 			return
 		_subtitle.text = "%s — choose a new ability  |  RENOWN %d" % [
-				_single_warlord.name, _single_warlord.renown]
+				_single_warlord.warlord_name, _single_warlord.renown]
 		_type_label.visible = false
 		var pick_name := "(decide later)"
 		if _single_choice > 0:
@@ -211,7 +211,7 @@ func _refresh() -> void:
 	_type_label.visible = true
 	var warlord := _warlords[_index]
 	_subtitle.text = "%s  (%d of %d)  |  RENOWN %d" % [
-			warlord.name, _index + 1, _warlords.size(), warlord.renown]
+			warlord.warlord_name, _index + 1, _warlords.size(), warlord.renown]
 	var type_name := "Levy (default)"
 	if _type_choice[_index] > 0:
 		type_name = unit_types[_type_choice[_index] - 1].display_name
