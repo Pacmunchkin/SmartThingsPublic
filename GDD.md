@@ -206,6 +206,55 @@ per-slot; HUD shows READY / countdown / ACTIVE.
   (READY / countdown / ACTIVE / LOCKED); longship countdown.
 - Health bars (warlords, recruits, gate); selection marker triangle.
 
+### 6.14 Exploration & Discoverables 🕓
+Interactable things placed in the world to make traversal rewarding (and to
+counter the "traversal grind" risk). **Any reward can be permanent or
+temporary** — the perm/temp choice is the main balancing lever (see note).
+
+**Reward taxonomy** — what a discovery can grant, what it serves, and how it
+usually wants to be tuned:
+
+| Reward | Serves | Tends to be | Example source |
+|---|---|---|---|
+| Renown | Renown clock | Permanent, small/rare | Runestone, famous plunder, skald |
+| Damage boost | Combat | Temporary (or capped perm) | Thor's blessing, banner aura, smith |
+| Defence boost | Combat | Temporary (or capped perm) | Týr's blessing, armour cache |
+| Army speed boost | Traversal/combat | Temporary | Blessing, banner, road |
+| Route reward | Strategic | Permanent (safe) | Ford, boat, **rear postern into a fort**, road, bridge |
+| Healing | Recovery | Instant/one-time | Sacred spring, holy well, provisions |
+| Recruits | Army clock | Permanent (self-limiting) | Deserters, escaped thralls, a champion |
+| Sabotage | Strategic denial | One-time | Disable a beacon, burn a granary (cut enemy production), open a gate from inside |
+| Useful information | Scouting | Permanent or timed reveal | Völva, watchtower, captured scout |
+| Speed a new warlord | Death economy | One-time | Hoard (plunder pays for reinforcement) |
+| Renown for a new warlord | Death economy | One-time | Recovered banner/relic — a newbie lands at renown > 0 |
+| Village production boost | Economy | Temporary or capped perm | Freyr's blessing, a mill/improvement |
+| Lore & flavour | Worldbuilding | n/a | Runestones, ruins, captured monks, skalds |
+
+**Permanent vs temporary — the balancing rule:**
+- **Power** (damage/defence/production) → prefer **temporary** blessings or
+  **capped** permanent upgrades. Uncapped permanent power is the snowball
+  trap that breaks the 5-vs-6 tuning.
+- **Knowledge & routes** (info, fords, rear entrances) → safe as
+  **permanent** — it's map mastery, not raw power.
+- **Recovery** (healing, recruits) → safe — self-limiting (spent, or die
+  normally).
+- **Death-economy finds** (speed/renown a newbie) → **one-time**, and they
+  tie straight into the two-clocks recovery (§8): they soften a death
+  without cheapening it.
+
+**Flavour sources** (the fiction that carries the rewards): Norse *blót*
+offering sites (choose a god → a themed blessing), silver hoards
+(guard the best ones), wandering skalds/völvas/smiths/thralls, Roman roads
+and river boats, sacred springs, runestones, enemy beacons to sabotage, a
+raven (Odin's) that leads to a hidden hoard.
+
+**Connections:** this layer is where the **dialogue system** (§11) earns its
+keep (skald, völva, captured monk all want voice lines), and the
+hoard/relic ideas seed the future **gold/loot economy**. Route the rewards
+across the three clocks (army / renown / traversal) so exploration serves
+different needs, and **guard the best rewards** so a find is a decision, not
+a checkbox.
+
 ---
 
 ## 7. Level Structure, Win & Faction Model
