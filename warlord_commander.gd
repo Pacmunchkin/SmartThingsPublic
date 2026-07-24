@@ -19,8 +19,10 @@
 # ├── Church (church.tscn)         <- sanctuary: heals, hosts ability picks
 # ├── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
 #                                     army size, ability cooldowns
-# └── WarCouncil (CanvasLayer)     <- war_council.gd: pre-level loadout
-#                                     menu (pauses the game until done)
+# ├── WarCouncil (CanvasLayer)     <- war_council.gd: pre-level loadout
+# │                                   menu (pauses the game until done)
+# └── LevelManager (CanvasLayer)   <- level_manager.gd: win condition
+#                                     (no enemy warlords left)
 #
 # Only player warlords go in the four commander slots below. Enemy warlords
 # are plain warlord.tscn instances with an AIController child and their
@@ -156,6 +158,9 @@ func _spawn_replacement(key: String) -> void:
 	if longship_dock != null:
 		warlord.global_position = longship_dock.global_position
 	warlord.died.connect(_on_warlord_died)
+	var level := get_tree().get_first_node_in_group("level_manager") as LevelManager
+	if level != null:
+		level.register_warlord(warlord)
 	match key:
 		"a": warlord_a = warlord
 		"b": warlord_b = warlord
