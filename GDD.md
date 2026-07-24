@@ -269,12 +269,32 @@ offering sites (choose a god → a themed blessing), silver hoards
 and river boats, sacred springs, runestones, enemy beacons to sabotage, a
 raven (Odin's) that leads to a hidden hoard.
 
-**Connections:** this layer is where the **dialogue system** (§11) earns its
-keep (skald, völva, captured monk all want voice lines), and the
-hoard/relic ideas seed the future **gold/loot economy**. Route the rewards
-across the three clocks (army / renown / traversal) so exploration serves
-different needs, and **guard the best rewards** so a find is a decision, not
-a checkbox.
+**Narrative encounters.** Discoverables are not just buff-dispensers — most
+are small **story vignettes** with choices (a child robbed by a bandit —
+help or walk on; an injured stag — mercy, spend a recruit to nurse it, or
+ignore). **Not everything gives a buff**; most are worldbuilding or moral
+texture, which keeps exploration from becoming a farmable checklist — the
+lopsided ratio toward flavour is deliberate.
+
+- **Auto-run makes "ignore" free.** Encounters trigger on entering the zone
+  and are **unpaused** — walking on *is* the "no". Engaging means choosing to
+  stop. No ignore button, no forced pause.
+- **Choices can cost, not just reward:** a fight (risk), spending a recruit,
+  time — as well as renown/buffs/nothing.
+- **This IS the dialogue system.** An encounter (opening line → choices →
+  per-choice outcome text + optional effect) is the same tech as Warcraft
+  3-style warlord conversations (§11). Build once, serve both. The
+  `Discoverable` resource grows from a flat buff into a small choice-tree.
+- **Dependency:** immediate outcomes are easy; *delayed/persistent* ones
+  (the nursed recruit rejoins later) need the **save/persistence system** —
+  build immediate encounters first.
+- **Authoring at volume:** past a couple dozen, move narrative into a
+  text-based format / dialogue tool so writing doesn't touch scenes.
+
+**Connections:** the hoard/relic ideas also seed the future **gold/loot
+economy**. Route rewards across the three clocks (army / renown / traversal)
+so exploration serves different needs, and **guard the best rewards** so a
+find is a decision, not a checkbox.
 
 ---
 
