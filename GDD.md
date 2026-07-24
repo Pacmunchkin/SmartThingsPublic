@@ -279,6 +279,16 @@ lopsided ratio toward flavour is deliberate.
 - **Auto-run makes "ignore" free.** Encounters trigger on entering the zone
   and are **unpaused** — walking on *is* the "no". Engaging means choosing to
   stop. No ignore button, no forced pause.
+- **Interaction flow:** enter the proximity zone → a dialogue window opens at
+  the **bottom of the screen**. Walk by with the **stick** (ignore) or engage
+  with the **d-pad** (plain d-pad = choices; hold-X + d-pad is still
+  abilities, so no clash — d-pad directions map to the options). When the
+  encounter **leaves the screen** (walk far enough that it scrolls off, or
+  switch warlords), the window closes and the encounter is **consumed — no
+  respawn, gone for good**, whether or not you chose. You may linger beside it
+  as long as you like (camera-locked, no timer); only *leaving* is final.
+  Tech: `Area2D` (enter) + `VisibleOnScreenNotifier2D` `screen_exited`
+  (consume) + a consumed flag.
 - **Choices can cost, not just reward:** a fight (risk), spending a recruit,
   time — as well as renown/buffs/nothing.
 - **This IS the dialogue system.** An encounter (opening line → choices →
