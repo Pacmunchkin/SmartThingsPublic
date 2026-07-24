@@ -211,23 +211,40 @@ Interactable things placed in the world to make traversal rewarding (and to
 counter the "traversal grind" risk). **Any reward can be permanent or
 temporary** — the perm/temp choice is the main balancing lever (see note).
 
+**Grounding — no magic (two channels).** Every buff has a *material* or
+*psychological* cause, never a supernatural one. The gods do not alter steel
+or flesh.
+- **Material channel** — weapons → damage, armour/shields → defence, food &
+  provisions → speed, rest/healer/herbs → healing, silver → longship
+  arrivals, roads/fords/boats/rear-entrances → routes. **Survivability (HP,
+  armour, healing) comes ONLY from this channel** — gear and recovery.
+- **Morale / reputation channel** — omens, a raven, a skald's song, a
+  heartening sacrifice, a recovered banner → **renown / a temporary "fight
+  harder"**, *never* survivability. This is where Norse belief lives without
+  magic: belief moved men's courage (real), it did not thicken their mail.
+  (The raven banner / Warlord Leads already works this way.)
+Rule: **belief can change the spirit (renown/morale), never the body.**
+Re-skinning a source is free — the mechanics are identical whether the
+fiction is "Týr's blessing" or "a cache of Frankish mail."
+
 **Reward taxonomy** — what a discovery can grant, what it serves, and how it
 usually wants to be tuned:
 
-| Reward | Serves | Tends to be | Example source |
+| Reward | Serves | Tends to be | Material/morale source |
 |---|---|---|---|
-| Renown | Renown clock | Permanent, small/rare | Runestone, famous plunder, skald |
-| Damage boost | Combat | Temporary (or capped perm) | Thor's blessing, banner aura, smith |
-| Defence boost | Combat | Temporary (or capped perm) | Týr's blessing, armour cache |
-| Army speed boost | Traversal/combat | Temporary | Blessing, banner, road |
+| Renown | Renown clock | Permanent, small/rare | Skald, famous plunder, runestone (reputation) |
+| Damage boost | Combat | Temporary (or capped perm) | Forged/captured weapons, a smithy |
+| Defence boost | Combat | Temporary (or capped perm) | Mail, shields, armour cache |
+| Army speed boost | Traversal/combat | Temporary | Food stores, provisions, pack animals |
 | Route reward | Strategic | Permanent (safe) | Ford, boat, **rear postern into a fort**, road, bridge |
-| Healing | Recovery | Instant/one-time | Sacred spring, holy well, provisions |
+| Healing | Recovery | Instant/one-time | Rest at camp, a healer/herbs, clean water |
 | Recruits | Army clock | Permanent (self-limiting) | Deserters, escaped thralls, a champion |
 | Sabotage | Strategic denial | One-time | Disable a beacon, burn a granary (cut enemy production), open a gate from inside |
-| Useful information | Scouting | Permanent or timed reveal | Völva, watchtower, captured scout |
-| Speed a new warlord | Death economy | One-time | Hoard (plunder pays for reinforcement) |
-| Renown for a new warlord | Death economy | One-time | Recovered banner/relic — a newbie lands at renown > 0 |
-| Village production boost | Economy | Temporary or capped perm | Freyr's blessing, a mill/improvement |
+| Useful information | Scouting | Permanent or timed reveal | Local guide, watchtower, captured scout |
+| Speed a new warlord | Death economy | One-time | Silver hoard (plunder pays the crew) |
+| Renown for a new warlord | Death economy | One-time | Recovered banner — the named legacy heartens the men |
+| Morale ("fight harder") | Combat (psych.) | Temporary | Omen, raven, skald's song, a heartening sacrifice |
+| Village production boost | Economy | Temporary or capped perm | Captured tools/livestock/seed, a mill |
 | Lore & flavour | Worldbuilding | n/a | Runestones, ruins, captured monks, skalds |
 
 **Permanent vs temporary — the balancing rule:**
