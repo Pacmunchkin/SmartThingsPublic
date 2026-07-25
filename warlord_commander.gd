@@ -36,6 +36,7 @@
 #   ability_up    -> Joypad D-pad Up
 #   ability_left  -> Joypad D-pad Left
 #   ability_right -> Joypad D-pad Right
+#   retreat       -> Joypad Button 5 (Right Shoulder / RB) — HOLD 3s to flee
 #   move_left / move_right / move_up / move_down
 #                 -> LEFT STICK axes only (see player_controller.gd);
 #                    keep the d-pad out of these — it belongs to abilities.
@@ -78,9 +79,14 @@ class_name WarlordCommander
 
 @onready var _camera: Camera2D = $Camera2D
 
+# Hold the "retreat" action (R) this long to trigger a retreat.
+const RETREAT_HOLD_TIME: float = 3.0
+
 var _selected: Warlord = null
 var _x_hold_used: bool = false  # X was used as an ability modifier
 var _pending_longships: Dictionary = {}  # slot key "a"/"b"/"x"/"y" -> seconds
+var _retreat_hold: float = 0.0
+var _retreat_fired: bool = false
 
 func _ready() -> void:
 	for warlord in [warlord_a, warlord_b, warlord_x, warlord_y]:
@@ -117,9 +123,22 @@ func _try_ability(slot: int) -> void:
 
 func _process(delta: float) -> void:
 	_tick_longships(delta)
+	_tick_retreat(delta)
 	# Camera stays snapped to the selected warlord (no smoothing, no tween).
 	if _selected != null:
 		_camera.global_position = _selected.global_position
+
+# Hold R for RETREAT_HOLD_TIME to make the selected warlord retreat (once
+# per hold). Releasing early cancels.
+func _tick_retreat(delta: float) -> void:
+	if _selected != null and Input.is_action_pressed("retreat"):
+		_retreat_hold += delta
+		if _retreat_hold >= RETREAT_HOLD_TIME and not _retreat_fired:
+			_retreat_fired = true
+			_selected.begin_retreat()
+	else:
+		_retreat_hold = 0.0
+		_retreat_fired = false
 
 # Used by hud.gd; null when no warlord survives.
 func get_selected_warlord() -> Warlord:

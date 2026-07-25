@@ -113,12 +113,22 @@ var army_size: int = 0
 # reach are never delayed, so combat pacing (and 5-vs-6 tuning) is intact.
 const TARGET_SCAN_INTERVAL: float = 0.25
 
+# --- Retreat ----------------------------------------------------------------
+# Hold R (see warlord_commander.gd) to flee, leaving ~50% of the retinue as
+# a rearguard. Renown drops (fleeing costs face) — small enough that ONE
+# retreat is recoverable, but repeated retreats compound. A renown drop can
+# lock an ability slot (is_slot_unlocked) until the renown is re-earned.
+const RETREAT_RENOWN_COST: int = 1
+const RETREAT_SAFE_DISTANCE: float = 700.0   # outrun pursuers past this = safe
+const RETREAT_VILLAGE_DISTANCE: float = 250.0 # reaching a friendly village = safe
+
 var _attack_timer: float = 0.0
 var _controller: WarlordController = null
 var _ability_cooldowns: Array[float] = [0.0, 0.0, 0.0]  # up, left, right
 var _active_effects: Array[Dictionary] = []  # {ability: Ability, time_left: float}
 var _scan_timer: float = 0.0
 var _base_max_health: float = 65.0  # pre-renown max health
+var _fleeing: bool = false
 
 @onready var _retinue: Node2D = $Retinue
 
@@ -174,11 +184,15 @@ func add_renown(amount: int) -> void:
 	if new_renown == renown:
 		return
 	renown = new_renown
-	# Warlord max health rises with reputation; the gain heals.
+	# Warlord max health tracks reputation: a gain heals the difference, a
+	# loss (e.g. from retreat) drops the ceiling and clamps current health.
 	var old_max := max_health
 	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)
-	health += maxf(max_health - old_max, 0.0)
-	# The retinue's trust rises with it.
+	if max_health >= old_max:
+		health += max_health - old_max
+	else:
+		health = minf(health, max_health)
+	# The retinue's trust rises (or falls) with it.
 	for child in _retinue.get_children():
 		if child is Recruit:
 			child.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
@@ -208,12 +222,75 @@ func _physics_process(delta: float) -> void:
 	if is_stunned():
 		velocity = Vector2.ZERO
 		return
-	_auto_attack()
+	if not _fleeing:
+		_auto_attack()  # a fleeing warlord runs, it does not stop to fight
 	var direction := Vector2.ZERO
 	if _controller != null:
 		direction = _controller.get_move_direction().limit_length(1.0)
-	velocity = direction * move_speed * speed_multiplier
+	var flee_scale := RETREAT_SPEED_MULT if _fleeing else 1.0
+	velocity = direction * move_speed * speed_multiplier * flee_scale
 	move_and_slide()
+	if _fleeing:
+		_check_escape()
+
+# --- Retreat ----------------------------------------------------------------
+
+func is_fleeing() -> bool:
+	return _fleeing
+
+# Called by WarlordCommander on a completed hold-R. Leave the front ~50% of
+# the retinue as a rearguard, flee with the rest, and pay renown.
+func begin_retreat() -> void:
+	if _fleeing:
+		return
+	var recruits: Array[Recruit] = []
+	for child in _retinue.get_children():
+		if child is Recruit:
+			recruits.append(child)
+	# The half closest to the enemy holds; the rest escape with the warlord.
+	recruits.sort_custom(func(a: Recruit, b: Recruit) -> bool:
+			return _nearest_enemy_distance(a) < _nearest_enemy_distance(b))
+	var rearguard_count := int(floor(recruits.size() * 0.5))
+	for i in recruits.size():
+		if i < rearguard_count:
+			_leave_as_rearguard(recruits[i])
+		else:
+			recruits[i].set_fleeing(true)
+	add_renown(-RETREAT_RENOWN_COST)  # fleeing costs standing; may lock a slot
+	_fleeing = true
+
+func _leave_as_rearguard(recruit: Recruit) -> void:
+	if recruit.died.is_connected(_on_recruit_died):
+		recruit.died.disconnect(_on_recruit_died)
+	army_size -= 1
+	recruit.release_from_retinue()
+
+func _nearest_enemy_distance(from: Node2D) -> float:
+	var nearest := INF
+	for node in get_tree().get_nodes_in_group("combatants"):
+		var other := node as Combatant
+		if other == null or other.team == team:
+			continue
+		nearest = minf(nearest, from.global_position.distance_to(other.global_position))
+	return nearest
+
+# Safe once a friendly village is reached, or all pursuers are outrun.
+func _check_escape() -> void:
+	for node in get_tree().get_nodes_in_group("villages"):
+		var village := node as Village
+		if village != null and village.team == team \
+				and global_position.distance_to(village.global_position) \
+				<= RETREAT_VILLAGE_DISTANCE:
+			_end_retreat()
+			return
+	if _nearest_enemy_distance(self) > RETREAT_SAFE_DISTANCE:
+		_end_retreat()
+
+func _end_retreat() -> void:
+	_fleeing = false
+	for child in _retinue.get_children():
+		if child is Recruit:
+			child.set_fleeing(false)
 
 # --- Abilities --------------------------------------------------------------
 

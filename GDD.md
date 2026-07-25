@@ -233,9 +233,17 @@ half the army.
   overtaken, a running fight breaks out.
 - **Future idea** 🕓: fleeing into a friendly village could have its garrison
   join the fight — a retreat that becomes an ambush.
+- **Renown cost:** retreat also drops renown by **1** (fleeing costs face —
+  the reputation/morale channel). Kept small so **one** retreat is
+  recoverable, while repeated ones compound. A renown drop can push the
+  warlord below an ability slot's threshold and **lock that slot** (via the
+  existing `is_slot_unlocked` gate) — the ability greys out until the renown
+  is re-earned (auto-recover; a "permanently removed, re-pick at church"
+  variant is a one-line change if wanted). It also lowers the renown HP
+  bonus.
 - **Economy fit:** trades the *recoverable* clock (army) to save the
-  *expensive* one (the warlord's renown/build) — see §8. **Self-limiting:**
-  each retreat costs half the army, and a recruit-less warlord can't retreat
+  *expensive* one (renown + build) — see §8. **Self-limiting:** each retreat
+  costs half the army + renown, and a recruit-less warlord can't retreat
   safely, so it can't be spammed. A successful retreat keeps the warlord in
   the level to regroup.
 - **Build note:** mostly reuse (rearguard = null follow-target; pursuit =

@@ -40,6 +40,11 @@ var melee_push: float = 0.0  # px each of my melee hits shoves the target
 # Subclasses tick stun_timer down in _physics_process and early-out.
 var stun_timer: float = 0.0
 
+# Retreat: the fleeing group (warlord + escort) is injured/spent and moves
+# at this fraction of its (buffed) speed. Pursuers move at 1.0, so a small
+# head-start gets eaten — see warlord.gd begin_retreat / recruit.gd.
+const RETREAT_SPEED_MULT: float = 0.8
+
 func stun(duration: float) -> void:
 	stun_timer = maxf(stun_timer, duration)
 

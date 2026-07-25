@@ -76,6 +76,7 @@ var _attack_timer: float = 0.0
 var _ranged_timer: float = 0.0
 var _scan_timer: float = 0.0
 var _base_max_health: float = 10.0  # pre-renown max health (see below)
+var _fleeing: bool = false  # escort during a warlord retreat: run, don't fight
 
 func _ready() -> void:
 	super._ready()
@@ -89,6 +90,23 @@ func get_credited_warlord() -> Warlord:
 	if follow_target != null and is_instance_valid(follow_target):
 		return follow_target as Warlord
 	return null
+
+# --- Retreat ----------------------------------------------------------------
+
+# Escort: flee with the warlord at RETREAT_SPEED_MULT and don't stop to fight.
+func set_fleeing(value: bool) -> void:
+	_fleeing = value
+
+# Left behind as a rearguard: stop following, hold this exact spot, and
+# fight — same behavior as a garrison. Detached from the warlord so it is
+# no longer part of the retinue (and won't be freed if the warlord dies).
+func release_from_retinue() -> void:
+	_release_combat_target()
+	follow_target = null
+	_post_position = global_position
+	_fleeing = false
+	if get_parent() != get_tree().current_scene:
+		reparent.call_deferred(get_tree().current_scene)
 
 # Renown: the warlord's reputation raises the retinue's max health.
 # Gains heal the difference; losses (never happens in v1) just clamp.
@@ -133,6 +151,15 @@ func _physics_process(delta: float) -> void:
 	stun_timer = maxf(stun_timer - delta, 0.0)
 	if is_stunned():
 		velocity = Vector2.ZERO
+		return
+	# Fleeing escort: run with the warlord at reduced speed, don't fight.
+	if _fleeing:
+		if follow_target != null and is_instance_valid(follow_target):
+			velocity = _velocity_toward(follow_target.global_position,
+					stop_distance) * RETREAT_SPEED_MULT
+		else:
+			velocity = Vector2.ZERO
+		move_and_slide()
 		return
 	_update_combat_target()
 	if _combat_target != null:
