@@ -206,6 +206,33 @@ per-slot; HUD shows READY / countdown / ACTIVE.
   (READY / countdown / ACTIVE / LOCKED); longship countdown.
 - Health bars (warlords, recruits, gate); selection marker triangle.
 
+### 6.14b Retreat 🕓 (targeted for v0.25)
+The pressure-release valve for a losing fight — save the warlord, pay with
+half the army.
+- **Input:** hold **R** (a free shoulder button) for **3 s** → the selected
+  warlord retreats. The hold guards against accidents.
+- **Rearguard:** ~**50% of the retinue** (the half already closest to the
+  enemy) is left behind to hold — mechanically, their follow-target is
+  cleared so they hold position and fight (existing garrison behavior). The
+  warlord flees with the other 50% as a mobile escort.
+- **Pursuit:** while the rearguard lives, enemies are occupied with it. When
+  it falls, enemies within pursuit range give chase. Because the warlord is
+  untargetable while any retinue lives, the escort must be cut down before
+  the warlord is exposed — a running fight, a last chance.
+- **Escape resolves** when the warlord reaches a **safe distance** from all
+  pursuers (they give up and return). **CRUX:** pursuers must move **slightly
+  faster** than the fleeing group, or any head-start is permanent and rearguard
+  size wouldn't matter. Big rearguard → big head-start → escape; thin
+  rearguard → caught. That speed ratio is the whole tuning knob.
+- **Economy fit:** trades the *recoverable* clock (army) to save the
+  *expensive* one (the warlord's renown/build) — see §8. **Self-limiting:**
+  each retreat costs half the army, and a recruit-less warlord can't retreat
+  safely, so it can't be spammed. A successful retreat keeps the warlord in
+  the level to regroup.
+- **Build note:** mostly reuse (rearguard = null follow-target; pursuit =
+  existing targeting/AI). New: hold-R input, the 50% split, a flee-state
+  (run to safety, don't stop to fight), the safe-distance check.
+
 ### 6.14 Exploration & Discoverables 🕓
 Interactable things placed in the world to make traversal rewarding (and to
 counter the "traversal grind" risk). **Any reward can be permanent or
