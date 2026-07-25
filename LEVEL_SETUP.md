@@ -16,9 +16,11 @@ Godot 4.7, 2D. All visuals are gray-box `ColorRect`s for now.
 - [ ] `select_b` → Joypad Button 1 (B / Circle)
 - [ ] `select_x` → Joypad Button 2 (X / Square)
 - [ ] `select_y` → Joypad Button 3 (Y / Triangle)
+- [ ] `ability` → a dedicated modifier button, e.g. Joypad Button 5 (RB)
 - [ ] `ability_up` → Joypad D-pad Up
 - [ ] `ability_left` → Joypad D-pad Left
 - [ ] `ability_right` → Joypad D-pad Right
+- [ ] `retreat` → a button held 3s, e.g. Joypad Button 4 (LB)
 - [ ] `move_left` → Joypad Axis 0 (Left Stick, negative)
 - [ ] `move_right` → Joypad Axis 0 (Left Stick, positive)
 - [ ] `move_up` → Joypad Axis 1 (Left Stick, negative)
@@ -128,9 +130,12 @@ Ability.** The full set makes the loadout menus feel complete.
 ### Core children
 - [ ] `Camera2D`  (direct child of Main — the commander drives it)
 - [ ] `WarlordA` (instance of `warlord.tscn`, **Team 0**)
-  - [ ] child `Controller` (plain Node + `player_controller.gd`)
-- [ ] `WarlordB`, `WarlordX`, `WarlordY` — same, each with a `Controller`
-      child (use as many as the level wants; unused slots can stay empty)
+  - [ ] child `Controller` (plain Node + `player_controller.gd`);
+        set its **Selection Action** = `select_a` in the Inspector
+- [ ] `WarlordB` / `WarlordX` / `WarlordY` — same, each with a `Controller`
+      whose **Selection Action** is `select_b` / `select_x` / `select_y`
+      (use as many as the level wants). The button binding lives on the
+      controller now — no central slot list.
 - [ ] One or more **enemy warlords** (instance `warlord.tscn`, **Team 1**)
   - [ ] child `AIController` (plain Node + `ai_controller.gd`)
   - [ ] give each a Retinue so it's a real fight
@@ -154,11 +159,12 @@ Ability.** The full set makes the loadout menus feel complete.
 - [ ] `LevelManager` (CanvasLayer + `level_manager.gd`, **Player Team 0**)
 
 ### Wire the commander (select Main, Inspector)
-- [ ] **Warlord A / B / X / Y** ← drag the matching warlord instances
 - [ ] **Warlord Scene** ← `warlord.tscn`  (enables longship replacements;
       leave empty for a true-permadeath hard level)
 - [ ] **Longship Dock** ← the `LongshipDock` Marker2D
 - [ ] **Replacement Delay** 60 (or taste)
+- (No warlord slots to fill — player warlords are discovered automatically
+  from their Controllers' Selection Action.)
 
 - [ ] Set `main.tscn` as the project's **main scene** (Project → Run).
 

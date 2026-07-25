@@ -3,71 +3,48 @@
 #
 # Main (Node2D)                    <- attach this script (warlord_commander.gd)
 # ├── Camera2D                     <- single game camera, driven by this script
-# ├── WarlordA (warlord.tscn)      <- drag into "Warlord A" in the Inspector
-# │   └── Controller (Node)        <- player_controller.gd
-# ├── WarlordB (warlord.tscn)      <- drag into "Warlord B"
-# │   └── Controller (Node)        <- player_controller.gd
-# ├── WarlordX (warlord.tscn)      <- drag into "Warlord X"
-# │   └── Controller (Node)        <- player_controller.gd
-# ├── WarlordY (warlord.tscn)      <- drag into "Warlord Y"
-# │   └── Controller (Node)        <- player_controller.gd
-# ├── EnemyWarlord (warlord.tscn)  <- Team = 1; NOT in a commander slot
-# │   └── AIController (Node)      <- ai_controller.gd
-# ├── Village (village.tscn)       <- any number of village instances
-# ├── Burh (burh.tscn)             <- fortifications at choke points
-# ├── City (city.tscn)             <- walled city with gate + battlements
-# ├── Church (church.tscn)         <- sanctuary: heals, hosts ability picks
-# ├── Hud (CanvasLayer)            <- hud.gd: selected warlord's health,
-#                                     army size, ability cooldowns
-# ├── WarCouncil (CanvasLayer)     <- war_council.gd: pre-level loadout
-# │                                   menu (pauses the game until done)
-# └── LevelManager (CanvasLayer)   <- level_manager.gd: win condition
-#                                     (no enemy warlords left)
+# ├── WarlordA (warlord.tscn)      <- Team 0; give its Controller a
+# │   └── Controller (Node)           selection_action of "select_a"
+# ├── WarlordB (warlord.tscn)      <- Controller.selection_action = "select_b"
+# │   └── Controller (Node)
+# ├── WarlordX (warlord.tscn)      <- Controller.selection_action = "select_x"
+# │   └── Controller (Node)
+# ├── WarlordY (warlord.tscn)      <- Controller.selection_action = "select_y"
+# │   └── Controller (Node)
+# ├── EnemyWarlord (warlord.tscn)  <- Team = 1; AIController child (not a player)
+# │   └── AIController (Node)
+# ├── Village / Burh / City / Church instances
+# ├── Hud (CanvasLayer)            <- hud.gd
+# ├── WarCouncil (CanvasLayer)     <- war_council.gd
+# └── LevelManager (CanvasLayer)   <- level_manager.gd
 #
-# Only player warlords go in the four commander slots below. Enemy warlords
-# are plain warlord.tscn instances with an AIController child and their
-# Team set in the Inspector.
+# SELECTION is now decentralized: each player warlord's Controller declares
+# its own button via an exported `selection_action` (see player_controller
+# .gd). This commander no longer holds four fixed slots — it discovers player
+# warlords from the "warlords" group (those with a PlayerController) and just
+# owns the shared concerns: the camera, ability + retreat routing to the
+# selected warlord, permadeath reselection, and longship replacements.
 #
 # REQUIRED INPUT MAP (Project Settings > Input Map):
-#   select_a      -> Joypad Button 0 (Bottom Action: Xbox A / Sony Cross)
-#   select_b      -> Joypad Button 1 (Right Action:  Xbox B / Sony Circle)
-#   select_x      -> Joypad Button 2 (Left Action:   Xbox X / Sony Square)
-#   select_y      -> Joypad Button 3 (Top Action:    Xbox Y / Sony Triangle)
-#   ability_up    -> Joypad D-pad Up
-#   ability_left  -> Joypad D-pad Left
-#   ability_right -> Joypad D-pad Right
-#   retreat       -> Joypad Button 5 (Right Shoulder / RB) — HOLD 3s to flee
-#   move_left / move_right / move_up / move_down
-#                 -> LEFT STICK axes only (see player_controller.gd);
-#                    keep the d-pad out of these — it belongs to abilities.
+#   select_a / select_b / select_x / select_y -> the four face buttons
+#     (each warlord's Controller.selection_action points at one of these)
+#   move_left / move_right / move_up / move_down -> LEFT STICK
+#   ability       -> a dedicated modifier button (e.g. Right Shoulder / RB)
+#   ability_up / ability_left / ability_right    -> D-pad Up / Left / Right
+#   retreat       -> a button held 3s to flee (e.g. Left Shoulder / LB)
 #
-# ABILITIES: hold X and press d-pad Up / Left / Right to fire the selected
-# warlord's matching ability slot (see warlord.gd / ability.gd). Because X
-# doubles as a modifier, warlord X is selected on RELEASE of the X button:
-# a plain tap still selects, but a hold used for an ability does not.
+# ABILITIES: hold `ability` and press d-pad Up/Left/Right to fire the selected
+# warlord's matching slot. (Abilities use their OWN button now, so the face
+# buttons are pure selection — no more X double-duty.)
 #
-# PERMADEATH + THE LONGSHIP: a dead warlord is gone forever, but their
-# slot is not — replacement_delay seconds after a death, a fresh warlord
-# (renown 0, random Norse name, no unit type or abilities yet) lands at
-# the Longship Dock, takes the empty slot, and the arrival loadout menu
-# opens (see war_council.gd open_warlord_setup). The cost of death is the
-# veteran's renown, the wait, and the march back from the shore.
-# INSPECTOR SETUP for replacements: drag warlord.tscn into "Warlord
-# Scene" and a Marker2D (place it at the shoreline) into "Longship Dock".
-# Leave Warlord Scene empty to disable replacements (true permadeath).
-#
-# If the selected warlord dies, selection jumps to the first surviving
-# warlord (A, B, X, Y order); with none alive, nothing is selected until
-# the next longship lands.
+# PERMADEATH + LONGSHIP: a dead warlord is gone; replacement_delay seconds
+# later a fresh warlord (renown 0, drawn name) lands at the Longship Dock,
+# inherits the fallen warlord's selection_action, and gets an arrival loadout.
+# Leave "Warlord Scene" empty to disable replacements (true permadeath).
 # =============================================================================
 
 extends Node2D
 class_name WarlordCommander
-
-@export var warlord_a: Warlord
-@export var warlord_b: Warlord
-@export var warlord_x: Warlord
-@export var warlord_y: Warlord
 
 # --- Longship replacements ---------------------------------------------------
 # Drag warlord.tscn here; empty = no replacements (true permadeath).
@@ -79,59 +56,86 @@ class_name WarlordCommander
 
 @onready var _camera: Camera2D = $Camera2D
 
-# Hold the "retreat" action (R) this long to trigger a retreat.
+# Hold the "retreat" action this long to trigger a retreat.
 const RETREAT_HOLD_TIME: float = 3.0
 
 var _selected: Warlord = null
-var _x_hold_used: bool = false  # X was used as an ability modifier
-var _pending_longships: Dictionary = {}  # slot key "a"/"b"/"x"/"y" -> seconds
+var _pending_longships: Dictionary = {}  # selection_action -> seconds
+var _death_action: Dictionary = {}       # warlord -> its selection_action
 var _retreat_hold: float = 0.0
 var _retreat_fired: bool = false
 
 func _ready() -> void:
-	for warlord in [warlord_a, warlord_b, warlord_x, warlord_y]:
-		if warlord != null:
-			warlord.died.connect(_on_warlord_died)
-	_select(warlord_a)
+	add_to_group("warlord_commander")
+
+# Called by a PlayerController when its selection_action is pressed.
+func select_warlord(warlord: Warlord) -> void:
+	if warlord == null or not is_instance_valid(warlord) or warlord == _selected:
+		return
+	if _selected != null and is_instance_valid(_selected):
+		_selected.is_selected = false
+	_selected = warlord
+	_selected.is_selected = true
+	_camera.global_position = _selected.global_position
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("select_a"):
-		_select(warlord_a)
-	elif event.is_action_pressed("select_b"):
-		_select(warlord_b)
-	elif event.is_action_pressed("select_y"):
-		_select(warlord_y)
-	elif event.is_action_released("select_x"):
-		# X selects on release so that hold-X + d-pad can fire abilities.
-		if not _x_hold_used:
-			_select(warlord_x)
-		_x_hold_used = false
-	elif event.is_action_pressed("ability_up"):
+	if event.is_action_pressed("ability_up"):
 		_try_ability(0)
 	elif event.is_action_pressed("ability_left"):
 		_try_ability(1)
 	elif event.is_action_pressed("ability_right"):
 		_try_ability(2)
 
-# Fire an ability slot on the selected warlord — only while X is held.
+# Fire an ability slot on the selected warlord — only while `ability` is held.
 func _try_ability(slot: int) -> void:
-	if not Input.is_action_pressed("select_x"):
+	if not Input.is_action_pressed("ability"):
 		return
-	_x_hold_used = true
-	if _selected != null:
+	if _selected != null and is_instance_valid(_selected):
 		_selected.activate_ability(slot)
 
 func _process(delta: float) -> void:
+	_track_players()
 	_tick_longships(delta)
 	_tick_retreat(delta)
-	# Camera stays snapped to the selected warlord (no smoothing, no tween).
-	if _selected != null:
+	# Auto-select if nothing is selected (game start, or after a death).
+	if _selected == null or not is_instance_valid(_selected):
+		_selected = null
+		_select_first_player()
+	if _selected != null and is_instance_valid(_selected):
 		_camera.global_position = _selected.global_position
 
-# Hold R for RETREAT_HOLD_TIME to make the selected warlord retreat (once
-# per hold). Releasing early cancels.
+# --- Player discovery --------------------------------------------------------
+
+# Player warlords = warlords in the group carrying a PlayerController.
+func _player_warlords() -> Array:
+	var result: Array = []
+	for node in get_tree().get_nodes_in_group("warlords"):
+		var w := node as Warlord
+		if w == null or w.is_queued_for_deletion():
+			continue
+		if w.find_child("*Controller", false, false) is PlayerController:
+			result.append(w)
+	return result
+
+# Discover each player warlord once: remember its selection_action (for
+# respawn) and hook its death.
+func _track_players() -> void:
+	for warlord in _player_warlords():
+		if _death_action.has(warlord):
+			continue
+		var pc := warlord.find_child("*Controller", false, false) as PlayerController
+		_death_action[warlord] = pc.selection_action if pc != null else "select_a"
+		if not warlord.died.is_connected(_on_warlord_died):
+			warlord.died.connect(_on_warlord_died)
+
+func _select_first_player() -> void:
+	var players := _player_warlords()
+	if not players.is_empty():
+		select_warlord(players[0])
+
 func _tick_retreat(delta: float) -> void:
-	if _selected != null and Input.is_action_pressed("retreat"):
+	if _selected != null and is_instance_valid(_selected) \
+			and Input.is_action_pressed("retreat"):
 		_retreat_hold += delta
 		if _retreat_hold >= RETREAT_HOLD_TIME and not _retreat_fired:
 			_retreat_fired = true
@@ -140,11 +144,16 @@ func _tick_retreat(delta: float) -> void:
 		_retreat_hold = 0.0
 		_retreat_fired = false
 
-# Used by hud.gd; null when no warlord survives.
-func get_selected_warlord() -> Warlord:
-	return _selected
+# --- Queries (used by hud.gd / war_council.gd) -------------------------------
 
-# Used by hud.gd: seconds until the next longship lands, 0 if none due.
+func get_selected_warlord() -> Warlord:
+	if _selected != null and is_instance_valid(_selected):
+		return _selected
+	return null
+
+func get_players() -> Array:
+	return _player_warlords()
+
 func get_next_longship_time() -> float:
 	var soonest: float = 0.0
 	for time_left in _pending_longships.values():
@@ -157,67 +166,40 @@ func get_next_longship_time() -> float:
 func _tick_longships(delta: float) -> void:
 	if warlord_scene == null or _pending_longships.is_empty():
 		return
-	for key in _pending_longships.keys():
-		_pending_longships[key] -= delta
-		if _pending_longships[key] <= 0.0:
-			_spawn_replacement(key)
+	for action in _pending_longships.keys():
+		_pending_longships[action] -= delta
+		if _pending_longships[action] <= 0.0:
+			_spawn_replacement(action)
 
-func _spawn_replacement(key: String) -> void:
-	_pending_longships.erase(key)
+func _spawn_replacement(action: String) -> void:
+	_pending_longships.erase(action)
 	var warlord := warlord_scene.instantiate() as Warlord
 	if warlord == null:
 		return
-	# Player-driven, but a fresh face: renown 0 (one ability slot, no
-	# buffs), random name, no unit type until the arrival loadout is set.
+	# A fresh face: renown 0, random name, no unit type until the arrival
+	# loadout is set. Its controller inherits the fallen warlord's button.
 	var controller := PlayerController.new()
 	controller.name = "Controller"
+	controller.selection_action = action
 	warlord.add_child(controller)
-	warlord.renown = 0
+	warlord.renown = 0.0
 	add_child(warlord)
 	if longship_dock != null:
 		warlord.global_position = longship_dock.global_position
-	warlord.died.connect(_on_warlord_died)
+	# _track_players will hook its death and record its action next frame;
+	# _process will auto-select it if nothing is selected.
 	var level := get_tree().get_first_node_in_group("level_manager") as LevelManager
 	if level != null:
 		level.register_warlord(warlord)
-	match key:
-		"a": warlord_a = warlord
-		"b": warlord_b = warlord
-		"x": warlord_x = warlord
-		"y": warlord_y = warlord
-	if _selected == null:
-		_select(warlord)
 	var council := get_tree().get_first_node_in_group("war_council") as WarCouncil
 	if council != null:
 		council.open_warlord_setup(warlord)
 
-func _select(warlord: Warlord) -> void:
-	if warlord == null or warlord == _selected:
-		return
-	if _selected != null:
-		_selected.is_selected = false
-	_selected = warlord
-	_selected.is_selected = true
-	_camera.global_position = _selected.global_position
-
 func _on_warlord_died(combatant: Combatant) -> void:
-	# Permadeath: clear the slot so its select button does nothing —
-	# and summon the next longship for it.
-	if combatant == warlord_a:
-		warlord_a = null
-		_pending_longships["a"] = replacement_delay
-	if combatant == warlord_b:
-		warlord_b = null
-		_pending_longships["b"] = replacement_delay
-	if combatant == warlord_x:
-		warlord_x = null
-		_pending_longships["x"] = replacement_delay
-	if combatant == warlord_y:
-		warlord_y = null
-		_pending_longships["y"] = replacement_delay
+	# Permadeath: queue the fallen warlord's button for the next longship.
+	var action: String = _death_action.get(combatant, "")
+	_death_action.erase(combatant)
+	if action != "":
+		_pending_longships[action] = replacement_delay
 	if _selected == combatant:
-		_selected = null
-		for survivor in [warlord_a, warlord_b, warlord_x, warlord_y]:
-			if survivor != null:
-				_select(survivor)
-				return
+		_selected = null  # _process reselects a survivor

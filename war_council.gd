@@ -62,11 +62,14 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("war_council")
 	_commander = get_parent() as WarlordCommander
+	# Deferred so every warlord has registered in the "warlords" group first
+	# (child _ready runs before this CanvasLayer's siblings settle).
+	_begin_council.call_deferred()
+
+func _begin_council() -> void:
 	if _commander != null:
-		for warlord in [_commander.warlord_a, _commander.warlord_b,
-				_commander.warlord_x, _commander.warlord_y]:
-			if warlord != null:
-				_warlords.append(warlord)
+		for warlord in _commander.get_players():
+			_warlords.append(warlord)
 	if _warlords.is_empty():
 		queue_free()
 		return
