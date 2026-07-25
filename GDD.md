@@ -147,23 +147,53 @@ duration + magnitude + radius per ability.
 **Cooldowns:** stored on the ability asset, counted down per-warlord
 per-slot; HUD shows READY / countdown / ACTIVE.
 
-### 6.5 Renown (Veterancy) ✅
-- Integer 0–5, **earned by deeds only** (never by waiting): +1 for
-  conquering a village, defeating a burh, destroying a city gate, killing an
-  enemy warlord.
-- Buffs: warlord +10% max HP per level; retinue +5% max HP and +2% speed per
-  level.
-- **Gates ability slots:** Up always usable, Left unlocks at renown 2, Right
-  at 4. Newly unlocked slots are filled at a church.
+### 6.5 Renown & Ability Levels (Veterancy)
+**Two stacked layers.** Renown is career XP; Ability Level is the tier you
+spend. (Current code ✅ uses placeholder integer renown; the economy below
+🔶 lands with the Option B ability build — §6.6.)
+
+- **Renown = career XP** — a running float, per-warlord, persists across the
+  campaign (longship newbies start at 0), effectively uncapped. Earned by
+  deeds only (never by waiting):
+
+  | Deed | Renown | Deed | Renown |
+  |---|---|---|---|
+  | Enemy recruit | 0.1 | City | 5 |
+  | Village | 1 | Enemy warlord | 10 |
+  | Burh | 3 | **Retreat** | **−1** |
+
+  (A single enemy-warlord kill = instant max level — "slay their champion,
+  come into your power." Recruits/villages are the minor trickle.)
+
+- **Ability Level (1–6) = tier derived from renown thresholds:**
+
+  | Level | 1 | 2 | 3 | 4 | 5 | 6 |
+  |---|---|---|---|---|---|---|
+  | Renown | 0 | 1 | 3 | 5 | 7 | 10 |
+
+- **Level drives everything** — passive buffs *and* ability points:
+  - Buffs scale with **level** (not raw renown, or they'd explode at
+    renown 10+): warlord +10% max HP / level; retinue +5% max HP, +2% speed
+    / level. Bounded at level 6.
+  - **1 ability point per level** (§6.6).
+- Retreat's −1 renown can drop a level → removes a point (locks/downgrades a
+  cooldown) and lowers the buffs.
 
 ### 6.6 Ability Upgrade Trees 🔶 (Option B — component system)
-- Planned redesign: an ability becomes a **list of effect-components**, each
-  with a type, magnitude, and `min_level`. Enables **branching upgrade
-  trees** and unique warlord builds (e.g. Charge L2 gains knockback, L3
-  gains damage).
-- **Renown funds ability levels; it is not equal to them.** The warlord
-  tracks each ability's level separately (so players build differently); the
-  shared asset holds the per-level value table. Upgrades chosen at churches.
+- An ability becomes a **list of effect-components**, each with a type,
+  magnitude, and `min_level`. Enables **branching upgrade trees** and unique
+  warlord builds (e.g. Charge L2 gains knockback, L3 gains damage).
+- **Points economy:** each **Ability Level** (§6.5) grants **1 point**, spent
+  as **add a new cooldown OR upgrade an existing one** — breadth vs depth.
+  With **3 d-pad slots** (max 3 cooldowns) and **6 points** at max level, a
+  curve emerges free: **early points buy breadth** (three tools by level 3),
+  **points 4–6 force depth** (out of slots → upgrade). "At level 3: three
+  cooldowns *or* one cooldown at level 3."
+- **Renown funds levels; it isn't equal to them.** The warlord tracks each
+  cooldown's level separately (so players build differently); the shared
+  asset holds the per-level component table. Points are spent at churches;
+  a renown loss (retreat) that drops a level locks/downgrades a cooldown.
+- Supersedes the interim fixed-3-slots-at-renown model in the current code.
 
 ### 6.7 Villages ✅
 - Produce a recruit every 10s up to a 25 garrison cap.
