@@ -219,11 +219,20 @@ half the army.
   it falls, enemies within pursuit range give chase. Because the warlord is
   untargetable while any retinue lives, the escort must be cut down before
   the warlord is exposed — a running fight, a last chance.
-- **Escape resolves** when the warlord reaches a **safe distance** from all
-  pursuers (they give up and return). **CRUX:** pursuers must move **slightly
-  faster** than the fleeing group, or any head-start is permanent and rearguard
-  size wouldn't matter. Big rearguard → big head-start → escape; thin
-  rearguard → caught. That speed ratio is the whole tuning knob.
+- **Flee speed:** the fleeing group (warlord + escort) is injured/spent:
+  `speed = (base + buffs) × 0.8`. Buffs stay active in retreat, so a saved
+  **speed buff is your escape hatch** — no buff → 0.8× vs pursuers' 1.0× (they
+  close the gap; a thin rearguard = caught); Charge 1.5× → 1.2× (clean
+  getaway). Escape abilities become dual-purpose (offense *and* escape).
+- **Player-controlled:** retreat is an **active chase you steer**, not
+  auto-path — route to safety yourself while the faster pursuers close. The
+  natural goal is a **friendly village** (safety *and* the rebuild point:
+  muster fresh recruits). **Escape resolves** on reaching a friendly village
+  **or** outrunning pursuers to a safe distance (they give up). While fleeing
+  the warlord + escort don't stop to fight (or they'd be left behind); if
+  overtaken, a running fight breaks out.
+- **Future idea** 🕓: fleeing into a friendly village could have its garrison
+  join the fight — a retreat that becomes an ambush.
 - **Economy fit:** trades the *recoverable* clock (army) to save the
   *expensive* one (the warlord's renown/build) — see §8. **Self-limiting:**
   each retreat costs half the army, and a recruit-less warlord can't retreat
