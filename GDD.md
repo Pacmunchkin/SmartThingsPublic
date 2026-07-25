@@ -509,6 +509,12 @@ cooldowns) — the priority of the campaign phase.
 7. 🕓 **Campaign layer** — stitch levels, persist warlords/renown between them.
 8. 🕓 Enemy warlord ability AI; results/continue screen; onboarding for the
    invisible rules.
+9. 🕓 **Send-warlord-home command** (needs navigation + village muster): order
+   a depleted warlord to autopilot to the nearest friendly village to reload,
+   freeing the player to actively control another warlord in the meantime.
+   Kills the "manually walk home to reload" tedium; serves the single-thumb,
+   multiple-units pillar. The auto-walking warlord is still vulnerable en
+   route (interceptable).
 
 ---
 
