@@ -83,23 +83,32 @@ class_name Warlord
 @export var ability_left: Ability
 @export var ability_right: Ability
 
-# --- Renown -----------------------------------------------------------------
-# Morale/veterancy, earned by DEEDS (never by waiting): +1 for conquering
-# a village, defeating a burh garrison, destroying a city gate, or killing
-# an enemy warlord. Levels 0..RENOWN_MAX. Longship replacements will start
-# at 0; set your starting warlords to 2 in the Inspector.
-# Per level: warlord +10% max health; retinue +5% max health, +2% speed.
-@export var renown: int = 0
+# --- Renown & Ability Level -------------------------------------------------
+# Renown = career XP (a float), earned by DEEDS (never by waiting). Deed
+# values are awarded at their sources (recruit 0.1 / village 1 / burh 3 /
+# city gate 5 / enemy warlord 10 — see on_enemy_killed, village.gd, burh.gd).
+# Retreat costs 1 (see RETREAT_RENOWN_COST). Longship replacements start at
+# 0. Renown is uncapped; set starting warlords in the Inspector.
+#
+# ABILITY LEVEL (1..6) is a tier derived from renown thresholds; it drives
+# the passive buffs AND unlocks ability slots. NOTE (vertical slice): only
+# the "add a cooldown" half is implemented — slots unlock at levels 1/2/3.
+# The "upgrade a cooldown deeper" half (levels 4-6 spending points on
+# component depth) arrives with the Option B ability system in v0.3.
+@export var renown: float = 0.0
 
-const RENOWN_MAX: int = 5
-const RENOWN_WARLORD_HEALTH: float = 0.10   # warlord max HP per level
-const RENOWN_RETINUE_HEALTH: float = 0.05   # retinue max HP per level
-const RENOWN_RETINUE_SPEED: float = 0.02    # retinue speed per level
+const ABILITY_LEVEL_MAX: int = 6
+# Renown needed for each ability level, index 0 = level 1 ... index 5 = 6.
+const ABILITY_LEVEL_THRESHOLDS: Array[float] = [0.0, 1.0, 3.0, 5.0, 7.0, 10.0]
+# Passive buffs per level ABOVE 1 (a fresh level-1 warlord has no bonus).
+const LEVEL_WARLORD_HEALTH: float = 0.10   # warlord max HP per level
+const LEVEL_RETINUE_HEALTH: float = 0.05   # retinue max HP per level
+const LEVEL_RETINUE_SPEED: float = 0.02    # retinue speed per level
 
-# Renown needed to USE each ability slot (up, left, right). Locked slots
-# ignore activation and show as LOCKED on the HUD. Newly unlocked slots
-# are filled by visiting a Church (see church.gd / war_council.gd).
-const ABILITY_SLOT_RENOWN: Array[int] = [0, 2, 4]
+# Ability LEVEL needed to unlock each slot (up, left, right). Locked slots
+# ignore activation and show as LOCKED on the HUD; unlocked slots are filled
+# by visiting a Church (see church.gd / war_council.gd).
+const ABILITY_SLOT_LEVEL: Array[int] = [1, 2, 3]
 
 # --- Selection --------------------------------------------------------------
 # Set by WarlordCommander. Read by PlayerController: only the selected
@@ -118,7 +127,7 @@ const TARGET_SCAN_INTERVAL: float = 0.25
 # a rearguard. Renown drops (fleeing costs face) — small enough that ONE
 # retreat is recoverable, but repeated retreats compound. A renown drop can
 # lock an ability slot (is_slot_unlocked) until the renown is re-earned.
-const RETREAT_RENOWN_COST: int = 1
+const RETREAT_RENOWN_COST: float = 1.0
 const RETREAT_SAFE_DISTANCE: float = 700.0   # outrun pursuers past this = safe
 const RETREAT_VILLAGE_DISTANCE: float = 250.0 # reaching a friendly village = safe
 
@@ -137,9 +146,9 @@ func _ready() -> void:
 	add_to_group("warlords")
 	if warlord_name.strip_edges().is_empty():
 		warlord_name = NamePool.draw()
-	renown = clampi(renown, 0, RENOWN_MAX)
+	renown = maxf(renown, 0.0)
 	_base_max_health = max_health
-	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)
+	max_health = _base_max_health * _warlord_health_mult()
 	health = max_health
 	_scan_timer = randf() * TARGET_SCAN_INTERVAL  # stagger scans across units
 	_controller = find_child("*Controller", false, false) as WarlordController
@@ -153,7 +162,7 @@ func add_recruit(recruit: Recruit) -> void:
 	recruit.team = team
 	if unit_type != null:
 		recruit.apply_unit_type(unit_type)
-	recruit.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
+	recruit.apply_health_bonus(_retinue_health_mult())
 	recruit.set_follow_target(self)
 	recruit.died.connect(_on_recruit_died)
 	army_size += 1
@@ -173,21 +182,36 @@ func set_loadout(new_unit_type: UnitType, first_ability: Ability) -> void:
 		for child in _retinue.get_children():
 			if child is Recruit:
 				child.apply_unit_type(unit_type)
-				child.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
+				child.apply_health_bonus(_retinue_health_mult())
 	if first_ability != null:
 		ability_up = first_ability
 
 # --- Renown -----------------------------------------------------------------
 
-func add_renown(amount: int) -> void:
-	var new_renown := clampi(renown + amount, 0, RENOWN_MAX)
-	if new_renown == renown:
+# Ability tier (1..ABILITY_LEVEL_MAX) from accumulated renown.
+func ability_level() -> int:
+	var level := 1
+	for i in ABILITY_LEVEL_THRESHOLDS.size():
+		if renown >= ABILITY_LEVEL_THRESHOLDS[i]:
+			level = i + 1
+	return level
+
+# Passive buff multipliers, scaled by levels ABOVE 1 (level 1 = no bonus).
+func _warlord_health_mult() -> float:
+	return 1.0 + LEVEL_WARLORD_HEALTH * (ability_level() - 1)
+
+func _retinue_health_mult() -> float:
+	return 1.0 + LEVEL_RETINUE_HEALTH * (ability_level() - 1)
+
+func add_renown(amount: float) -> void:
+	var new_renown := maxf(renown + amount, 0.0)
+	if is_equal_approx(new_renown, renown):
 		return
 	renown = new_renown
-	# Warlord max health tracks reputation: a gain heals the difference, a
-	# loss (e.g. from retreat) drops the ceiling and clamps current health.
+	# Warlord max health tracks level: a gain heals the difference, a loss
+	# (e.g. from retreat dropping a level) lowers the ceiling and clamps.
 	var old_max := max_health
-	max_health = _base_max_health * (1.0 + RENOWN_WARLORD_HEALTH * renown)
+	max_health = _base_max_health * _warlord_health_mult()
 	if max_health >= old_max:
 		health += max_health - old_max
 	else:
@@ -195,13 +219,18 @@ func add_renown(amount: int) -> void:
 	# The retinue's trust rises (or falls) with it.
 	for child in _retinue.get_children():
 		if child is Recruit:
-			child.apply_health_bonus(1.0 + RENOWN_RETINUE_HEALTH * renown)
+			child.apply_health_bonus(_retinue_health_mult())
 
-# Called by Combatant._award_kill_credit on the victim's death.
-# Only the great deeds count — recruits fall uncounted.
+# Called by Combatant._award_kill_credit on the victim's death. Deed values:
+# enemy warlord 10, city gate 5, enemy recruit 0.1 (village/burh awarded at
+# their own scripts).
 func on_enemy_killed(victim: Combatant) -> void:
-	if victim is Warlord or victim is CityGate:
-		add_renown(1)
+	if victim is Warlord:
+		add_renown(10.0)
+	elif victim is CityGate:
+		add_renown(5.0)
+	elif victim is Recruit:
+		add_renown(0.1)
 
 # Untouchable while the retinue lives — unless leading from the front
 # (Warlord Leads active). Fair game once the retinue is defeated.
@@ -379,7 +408,7 @@ func get_ability(slot: int) -> Ability:
 	return null
 
 func is_slot_unlocked(slot: int) -> bool:
-	return renown >= ABILITY_SLOT_RENOWN[slot]
+	return ability_level() >= ABILITY_SLOT_LEVEL[slot]
 
 # First slot unlocked by renown but with no ability assigned (-1 if none).
 # The Church offers to fill this slot when the warlord visits.
@@ -450,7 +479,7 @@ func _apply_ability_modifiers() -> void:
 	ranged_damage_taken_multiplier = ranged_mult
 	melee_push = push
 	# Renown: a confident retinue runs in faster (stacks with Charge).
-	var retinue_speed := speed_mult * (1.0 + RENOWN_RETINUE_SPEED * renown)
+	var retinue_speed := speed_mult * (1.0 + LEVEL_RETINUE_SPEED * (ability_level() - 1))
 	for child in _retinue.get_children():
 		if child is Recruit:
 			child.speed_multiplier = retinue_speed

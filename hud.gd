@@ -84,16 +84,16 @@ func _process(_delta: float) -> void:
 	var next_ship: float = 0.0
 	if _commander != null:
 		next_ship = _commander.get_next_longship_time()
-	_info_label.text = "%s  |  RENOWN %d/%d  |  HP %d/%d  |  ARMY %d/%d" % [
-			warlord.warlord_name, warlord.renown, Warlord.RENOWN_MAX,
-			roundi(warlord.health), roundi(warlord.max_health),
+	_info_label.text = "%s  |  LVL %d/%d (%.1f)  |  HP %d/%d  |  ARMY %d/%d" % [
+			warlord.warlord_name, warlord.ability_level(), Warlord.ABILITY_LEVEL_MAX,
+			warlord.renown, roundi(warlord.health), roundi(warlord.max_health),
 			warlord.army_size, warlord.max_retinue]
 	if next_ship > 0.0:
 		_info_label.text += "  |  LONGSHIP %ds" % ceili(next_ship)
 	for i in 3:
 		if not warlord.is_slot_unlocked(i):
 			_slot_names[i].text = "LOCKED"
-			_slot_status[i].text = "RENOWN %d" % Warlord.ABILITY_SLOT_RENOWN[i]
+			_slot_status[i].text = "LVL %d" % Warlord.ABILITY_SLOT_LEVEL[i]
 			_slot_status[i].modulate = Color(1, 1, 1, 0.4)
 			continue
 		var ability := warlord.get_ability(i)

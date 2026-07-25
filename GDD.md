@@ -149,8 +149,11 @@ per-slot; HUD shows READY / countdown / ACTIVE.
 
 ### 6.5 Renown & Ability Levels (Veterancy)
 **Two stacked layers.** Renown is career XP; Ability Level is the tier you
-spend. (Current code ✅ uses placeholder integer renown; the economy below
-🔶 lands with the Option B ability build — §6.6.)
+spend. ✅ **Implemented (v0.25):** float renown, deed values, level
+thresholds, level-derived buffs, and slot-unlock-by-level. 🔶 **Still to
+come (Option B, §6.6):** spending points to *upgrade a cooldown's depth*
+(the branching component trees) — for now a level only unlocks the 3 slots.
+(Numbers below are vertical-slice pacing — the real game progresses slower.)
 
 - **Renown = career XP** — a running float, per-warlord, persists across the
   campaign (longship newbies start at 0), effectively uncapped. Earned by

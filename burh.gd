@@ -92,7 +92,7 @@ func _award_renown(last_defender: Combatant) -> void:
 		return
 	var credited := killer.get_credited_warlord()
 	if credited != null and is_instance_valid(credited) and credited.team != team:
-		credited.add_renown(1)
+		credited.add_renown(3.0)  # defeating a burh is worth 3 renown
 
 # Defeat is permanent: hide the wall, switch off its collision, and free
 # any navigation obstacle so the choke point becomes passable — physically

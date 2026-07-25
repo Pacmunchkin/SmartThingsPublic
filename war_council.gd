@@ -247,8 +247,8 @@ func _refresh() -> void:
 			_type_label.text = "%s Unit Type:     < %s >" % [_marker(0), type_pick]
 			_ability_label.text = "%s First Ability: < %s >" % [_marker(1), ability_pick]
 			return
-		_subtitle.text = "%s — choose a new ability  |  RENOWN %d" % [
-				_single_warlord.warlord_name, _single_warlord.renown]
+		_subtitle.text = "%s — choose a new ability  |  LVL %d" % [
+				_single_warlord.warlord_name, _single_warlord.ability_level()]
 		_type_label.visible = false
 		var pick_name := "(decide later)"
 		if _single_choice > 0:
@@ -257,8 +257,8 @@ func _refresh() -> void:
 		return
 	_type_label.visible = true
 	var warlord := _warlords[_index]
-	_subtitle.text = "%s  (%d of %d)  |  RENOWN %d" % [
-			warlord.warlord_name, _index + 1, _warlords.size(), warlord.renown]
+	_subtitle.text = "%s  (%d of %d)  |  LVL %d" % [
+			warlord.warlord_name, _index + 1, _warlords.size(), warlord.ability_level()]
 	var type_name := "Levy (default)"
 	if _type_choice[_index] > 0:
 		type_name = unit_types[_type_choice[_index] - 1].display_name

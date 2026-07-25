@@ -9,7 +9,7 @@
 # within sanctuary_range:
 #   - HEAL: the warlord and their retinue recover heal_per_second HP.
 #   - LEVEL UP: if the warlord has an ability slot unlocked by renown but
-#     not yet filled (see warlord.gd ABILITY_SLOT_RENOWN), the ability
+#     not yet filled (see warlord.gd ABILITY_SLOT_LEVEL), the ability
 #     pick menu opens when they arrive. The game does NOT pause: the left
 #     stick still moves the warlord; d-pad Left/Right cycles the choice,
 #     (A) confirms, (B) declines. A declined offer comes back the next
