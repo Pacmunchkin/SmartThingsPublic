@@ -143,6 +143,11 @@ var _fleeing: bool = false
 
 func _ready() -> void:
 	super._ready()
+	# Top-down: no gravity, no floor-snapping. FLOATING disables the
+	# platformer floor/up-direction logic that otherwise fights upward
+	# movement and drags horizontal movement "down" toward any body it
+	# treats as floor (e.g. retinue recruits sharing a collision layer).
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("warlords")
 	if warlord_name.strip_edges().is_empty():
 		warlord_name = NamePool.draw()

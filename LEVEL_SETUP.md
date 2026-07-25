@@ -32,6 +32,12 @@ Godot 4.7, 2D. All visuals are gray-box `ColorRect`s for now.
       mask 1**. That way recruits shove each other, hold a battle line, and
       bump walls. Refine into separate layers later if needed.
 
+### Motion mode (top-down)
+- Warlord and Recruit set **Motion Mode = Floating** in code (`_ready`), so
+  no Inspector step is needed. (The `CharacterBody2D` default, *Grounded*,
+  is for platformers — its floor-snapping fights upward movement and drags
+  horizontal movement downward when units share a collision layer.)
+
 ---
 
 ## 1. Resource Assets (.tres)

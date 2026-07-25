@@ -80,6 +80,8 @@ var _fleeing: bool = false  # escort during a warlord retreat: run, don't fight
 
 func _ready() -> void:
 	super._ready()
+	# Top-down movement — see warlord.gd. No gravity, no floor-snapping.
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	health = max_health
 	_base_max_health = max_health
 	_post_position = global_position
