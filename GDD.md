@@ -301,6 +301,32 @@ lopsided ratio toward flavour is deliberate.
 - **Authoring at volume:** past a couple dozen, move narrative into a
   text-based format / dialogue tool so writing doesn't touch scenes.
 
+**Temporary buff lifespans.** Buffs expire in the *currency of the activity
+they serve* — spend a buff in its own resource so it never feels wasted:
+- **Encounters** (e.g. +damage for 3 fights) — combat buffs. An "encounter"
+  ends after the army is **calm for 3 min** (tunable), so a chained raid
+  counts as one — rewarding sustained aggression.
+- **Distance** (e.g. speed for 100 tiles) — movement buffs.
+- **Real-time** (e.g. 5 min) — continuous/economy buffs.
+- **Permanent (capped)** — gear/relic finds.
+Modelled as `expiry_type {TIME|DISTANCE|ENCOUNTERS|PERMANENT} + amount`.
+Avoid **real-time on combat buffs** — in a slow game they expire during
+travel, before the fight, and pressure the player to rush.
+
+**Vision & fog = the camera.** No fog-of-war system: the locked camera *is*
+the fog — you see only what's around the warlord, no shroud, no memory. A
+**vision buff is a temporary camera zoom-out** (`Camera2D.zoom`). Cheap, and
+it reinforces leading from the front (you don't know what's over the hill).
+
+**Buff feedback = toasts, not a live HUD.** Passive buffs announce their
+limit on gain and their end on expiry ("+Speed for 100 tiles" → "Speed wore
+off") — no cluttered countdowns. Abilities keep their live cooldown HUD
+(active management); discoverable buffs are fire-and-forget toasts.
+
+**Future — momentum / resolve** 🕓: sustaining combat by linking enemy
+groups into one long fight raises army resolve (= morale, attack+defence).
+Pairs with the 3-min encounter window that enables the chaining.
+
 **Connections:** the hoard/relic ideas also seed the future **gold/loot
 economy**. Route rewards across the three clocks (army / renown / traversal)
 so exploration serves different needs, and **guard the best rewards** so a
@@ -417,11 +443,33 @@ cooldowns) — the priority of the campaign phase.
 | Permadeath full-restart boredom (Bad North) | 🔶 Addressed — longship + checkpoint contract |
 | Rebuild grind after setback (Kingdom Two Crowns) | Mitigated by Call + village caps; watch in playtest |
 | Traversal time (Kingdom Two Crowns) | Design goal is *engaging* slow travel; movement-feel pass 🕓 |
-| Rule opacity (Thronefall, Kingdom) | 🕓 Needs radius indicators + tutorial |
+| Rule opacity (Thronefall, Kingdom) | 🕓 Progressive complexity (below) + radius indicators |
 | Content variety (Bad North) | 5 unit types + 8 abilities; enemy loadout variety is editor work |
 | Hold-X input overload | Watch in playtest; a shoulder-button modifier is the fallback |
 
 ---
+
+## 12b. Progressive Complexity (Onboarding) 🕓
+
+The game has many overlapping systems (buffs, cooldowns, unit types, unit
+maneuvers, army caps, multiple warlords, permadeath, discoverables) — too
+much to present at level 1. **The campaign IS the tutorial: introduce one
+mechanic per level**, building slowly to the full-complexity late game.
+
+Key point: complexity is controlled by **what each level is composed of, not
+by gating code** — the modular, data-driven architecture already supports
+this. A level with no ability `.tres` assigned simply has no abilities; a
+one-warlord level *is* the single-warlord tutorial. Example ladder:
+
+1. Move & fight (one warlord, one unit type, no abilities, no economy).
+2. One ability.
+3. Villages + mustering (grow the army).
+4. A burh (choke points).
+5. A second warlord + switching.
+6. Renown, churches, unit-type choice, permadeath stakes…
+
+Only small "lock"/prompt polish is code; the teaching ladder itself is level
+design. Keep every system **toggleable-by-omission** (they already are).
 
 ## 13. Reference Games
 
