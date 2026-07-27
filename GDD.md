@@ -116,18 +116,37 @@ reserved for abilities. ✅
   only when outnumbered. Duels are committed until one side dies.
 - Behavior priority: fight units → fight structures (non-sticky) → follow
   warlord → hold post.
-- Retinue cap: **50** (`max_retinue`).
+- Retinue cap: **50** (`max_retinue`) overall; **per-unit-type caps** limit
+  the mix (§15.4).
+- **Combat behaviours (rebuild refinements):**
+  - **Retaliation + rally:** a unit shot from beyond its aggro range charges
+    the shooter *and* alerts everyone sharing its leader (same retinue /
+    garrison), so the whole group turns on the archers together (Bad North
+    "rush the bows"). Chase is **distance-capped** so groups don't cross the map.
+  - **Hold-at-range (bows):** ranged units flagged `hold_at_range` stop at
+    their range and trade fire instead of closing (bows-vs-bows don't brawl);
+    they still swing weakly if an enemy reaches them.
+  - Arrows carry their **shooter** (for retaliation) and a **max travel**
+    distance (no map-crossing shots).
 
 ### 6.3 Unit Types ✅ (resource-driven — `UnitType.tres`)
-| Type | Role | Notes |
-|---|---|---|
-| Seaxes | Fast, weak | Quick attacks (0.6s) |
-| Axes | Slow, heavy | Hard hits, tanky-ish |
-| Spears | Baseline | Throws javelins while closing, then slow melee |
-| Shield & Sword | Resilient | High HP, elite |
-| Bows | Ranged only | Stationary while shooting; never melees |
 
-A warlord's assigned unit type stamps its stats onto the whole retinue.
+**Six types.** Each carries a **built-in "signature" ability** that auto-fills
+the warlord's **Up** d-pad slot (Left/Right are player-picked universals —
+§6.4). Full stats, the **armour model**, and **per-type retinue caps** live in
+§15 (Combat Balance).
+
+| Type | Role | Signature ability (Up) |
+|---|---|---|
+| Seax | Fast assault — shreds light troops, bounces off armour | **Flurry** (attack-speed burst) |
+| Axe | Anti-armour shock — few heavy, piercing blows | **Shield Breach** (armour pierce) |
+| Spear | Line infantry — first-strike, throws while closing | **Brace** (opening damage vs charge) |
+| Sword & Shield | Durable anchor | **Shield Bash** (single-target stun) |
+| Shield Wall | Fortress — anti-missile, holds chokes | **Push Back** (AoE shove + brief stun) |
+| Bows | Long-range artillery — helpless if reached | **Volley** (fire-rate burst) |
+
+A warlord's assigned unit type stamps its stats **and its signature Up
+ability** onto the whole retinue.
 
 ### 6.4 Abilities ✅ (resource-driven — `Ability.tres`)
 Three slots per warlord (Up/Left/Right), each an ability asset. Cooldown +
@@ -146,6 +165,56 @@ duration + magnitude + radius per ability.
 
 **Cooldowns:** stored on the ability asset, counted down per-warlord
 per-slot; HUD shows READY / countdown / ACTIVE.
+
+#### 6.4a Ability model (rebuild direction)
+The three slots resolved into a **fixed identity + free choice** split:
+- **Up = the unit type's built-in signature ability** (§6.3) — auto-filled.
+- **Left / Right = player-chosen *universal* cooldowns** — must be two
+  *different* universals; any warlord may take the same ones as another.
+
+**Universal cooldowns** (picked in the War Council):
+
+| Ability | Effect | Status |
+|---|---|---|
+| Charge | +move speed (blocked if already in melee) | ✅ |
+| Steadfast | +armour (½ damage taken) − move speed | ✅ |
+| Rally Cry | retinue +damage & +defence | ✅ |
+| Knockback | shove + stun one enemy | ✅ |
+| Feigned Retreat | auto-retreat then counter | 🕓 needs retreat AI |
+| Scout | detach a scout, reveal fog | 🕓 needs fog of war |
+| Raise the Standard | plant banner, morale | 🕓 needs morale |
+
+**Primitives:** **stun** (frozen + *interrupts active buffs*; spinning-star
+tell) and **knockback** (a decaying shove) — these unlock Shield Bash, Push
+Back, and Knockback. Buff effects apply as multipliers to warlord + retinue;
+instant effects (stun/knockback) fire once and don't linger.
+
+**Who has cooldowns:** **only warlords** (enemy warlords included). Structures
+— burhs, villages, battlements, city gates — never use abilities; they're
+balanced by numbers/HP, giving the player low-stakes practice before the
+warlord "boss" fights (which escalate: first warlord easy → last a real duel).
+
+**Design intent — no "press to win," bait-and-punish (Overwatch-like).** Every
+cooldown opens a **vulnerability window** (spent → on cooldown); the loop is
+*bait the enemy's ability, then push during the downtime*. **Balance by
+cooldown length (uptime), not magnitude** — a small persistent edge compounds
+(Lanchester), so strong = long cooldown = long punish window.
+
+**Counter-web** (a legible spine; the rest contextual):
+- **Stun (Shield Bash / Knockback) → any active buff** — interrupts it (the
+  hardest counter: *control beats commitment*).
+- **Shield Breach (pierce) → Steadfast / armour.**
+- **Steadfast (defence) → offensive bursts** (Flurry / Volley / Shield Breach).
+- **Brace / Push Back → Charge** (the engage); **Charge → Volley** (closes on
+  the archers).
+- Loop: **Offence → Defence → Pierce → Control → Spacing → Offence.**
+- Purely contextual (no hard counter): Rally Cry, Scout, Raise the Standard,
+  Feigned Retreat.
+
+**Enemy-AI intent** 🕓: enemy warlords **use** their cooldowns on **legible,
+exploitable triggers** (predictable enough to *bait* — Souls-boss style, not
+optimal). Late-game warlords should **hold their stun to interrupt the
+player's buffs** rather than open with it — "the boss punishes your buttons."
 
 ### 6.5 Renown & Ability Levels (Veterancy)
 **Two stacked layers.** Renown is career XP; Ability Level is the tier you
@@ -214,7 +283,11 @@ come (Option B, §6.6):** spending points to *upgrade a cooldown's depth*
 - **Gate:** a destructible *structure* (500 HP) that blocks the only opening;
   attackers break off if their warlord leaves (not locked in). Removed at 0 HP.
 - **Battlements:** stationary emplacements firing homing arrows at enemies in
-  range; can't currently be attacked.
+  range. **Destroyable by *ranged* units only** (wall-top — ground melee can't
+  reach; pure-melee units ignore them) → bring bows to silence the walls.
+- **Gate reinforcement** 🕓 (idea): the gate **spawns enemy recruits while it
+  holds** (like a burh garrison), turning it into a **pressure clock** — break
+  it fast or get swarmed.
 - Indestructible walls funnel the assault to the gate.
 
 ### 6.10 Churches ✅ / 🔶
@@ -662,3 +735,63 @@ only caveat: a **unique `ShaderMaterial` per unit** can break 2D batching at
 very high counts (more draw calls). **Escape hatch** (only if it ever bites):
 **bake the recolour to a texture once at spawn**, then use a plain sprite —
 no per-frame shader, fully batchable. Don't build this pre-emptively.
+
+## 15. Combat Balance & Tuning 🕓 (starting values — tune in playtest)
+
+Derived from a Monte-Carlo combat simulator that mirrors the pairing / ranged
+/ armour rules (100+ battles per data point). **These are starting numbers,
+not gospel.** The sim clumps units with **no flanking, kiting, or screening**,
+so it **over-rates shields** and **under-rates bows / fast units** — finalise
+in real play (§15.6).
+
+### 15.1 Armour model (StarCraft-style flat reduction)
+Flat per-hit reduction — so big slow hits shrug off armour while fast weak
+hits get eaten, *for free*:
+
+`dealt = max(15% of raw, raw − target_armour × (1 − attacker_pierce))`
+
+- New `UnitType` fields: **`armour`** (melee), **`missile_armour`** (vs arrows),
+  **`pierce`** (0–1 — ignores that fraction of the target's armour).
+- **The damage floor (~15% of raw) is a key knob:** it decides whether light
+  troops can grind through armour at all. `0` = shields **hard-wall** Seax
+  (you *must* bring anti-armour); higher = grindable. The floor only bites
+  when `armour ≥ raw damage` — i.e. exactly the light-vs-shield case.
+
+### 15.2 Attack-speed ladder
+Attack interval should **inversely track per-hit damage** — otherwise "slow"
+just means "worse." Slow units must **trade sustained DPS for per-hit punch**.
+Axe = slowest / biggest hit (anti-armour); Seax = fastest.
+
+### 15.3 Recommended starting stat block
+
+| Unit | move | HP | dmg | atk int | ranged rr/rd/ri | armour | miss. | pierce | cap |
+|---|---|---|---|---|---|---|---|---|---|
+| **Seax** | 210 | 9 | 2 | 0.5 | — | 0 | 0 | 0 | **12** |
+| **Spear** | 175 | 12 | 3 | 0.8 | 120/3/2.0 | 1 | 1 | 0.30 | **5** |
+| **Sword & Shield** | 160 | 17 | 3 | 0.95 | — | 2 | 2 | 0 | **6** |
+| **Bows** | 170 | 7 | 1 | 1.1 | 300/4/1.4 | 0 | 0 | 0.60 | **9** |
+| **Shield Wall** | 135 | 16 | 2 | 1.3 | — | 3 | **5** | 0 | **6** |
+| **Axe** | 150 | 14 | 6 | 1.7 | — | 1 | 1 | 0.55 | **6** |
+
+### 15.4 Retinue caps — the *primary* balance lever
+Per-type caps limit how many of a type a retinue may hold. Because of
+**Lanchester's square law**, cheap units need caps far *lower* than raw power
+implies (12 cheap bodies rout 4 elites regardless of quality), so caps are
+solved against **full-retinue fights** (~cap ∝ power^-0.7), anchored to
+**Seax = 12**. The rock-paper-scissors lives at the **cap** level, not
+per-unit: e.g. 10 Axe ≈ 21 Seax, yet a full Seax retinue (12) *beats* a full
+Axe retinue (6).
+
+### 15.5 Counter web (units, from the sim)
+- **Seax** → Axe, Bows (fast closers); walled by shields.
+- **Axe** → shields (pierce); loses to Seax, Bows.
+- **Spear** → most infantry (first strike); loses to Axe.
+- **Sword & Shield** → light (Seax); folds to anti-armour.
+- **Shield Wall** → Bows (missile armour) & Seax; too slow vs Axe.
+- **Bows** → armour at range; die to Seax rushes, bounce off Shield Wall.
+
+### 15.6 Known sim biases — correct these in playtest
+- **Shields test too strong** (the sim never flanks to punish their slowness).
+- **Bows & Seax test too weak** (no kiting/screening) — their caps (9 / 12)
+  pre-compensate; expect them to shine once positioning is real.
+- **Spear sits on a knife-edge at cap 5** — first thing to watch/tune.
