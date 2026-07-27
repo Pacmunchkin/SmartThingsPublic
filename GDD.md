@@ -126,6 +126,9 @@ reserved for abilities. ✅
   - **Hold-at-range (bows):** ranged units flagged `hold_at_range` stop at
     their range and trade fire instead of closing (bows-vs-bows don't brawl);
     they still swing weakly if an enemy reaches them.
+  - **Targeting:** melee uses least-engaged pairing (duels); **ranged targets
+    the *nearest* enemy** — so a tanky screen (Shield Wall, missile armour 5)
+    draws battlement / archer fire and lets other units slip past.
   - Arrows carry their **shooter** (for retaliation) and a **max travel**
     distance (no map-crossing shots).
 
@@ -279,16 +282,36 @@ come (Option B, §6.6):** spending points to *upgrade a cooldown's depth*
   a choke point** until the garrison is wiped, then opens permanently.
 - **Not capturable** — just defeated. Placed at choke points in level design.
 
-### 6.9 Cities ✅
-- **Gate:** a destructible *structure* (500 HP) that blocks the only opening;
-  attackers break off if their warlord leaves (not locked in). Removed at 0 HP.
-- **Battlements:** stationary emplacements firing homing arrows at enemies in
-  range. **Destroyable by *ranged* units only** (wall-top — ground melee can't
-  reach; pure-melee units ignore them) → bring bows to silence the walls.
-- **Gate reinforcement** 🕓 (idea): the gate **spawns enemy recruits while it
-  holds** (like a burh garrison), turning it into a **pressure clock** — break
-  it fast or get swarmed.
-- Indestructible walls funnel the assault to the gate.
+### 6.9 Settlements — Villages, Towns & Cities ✅ / 🕓
+Settlements are **compositions of building blocks, not fixed sizes** — stack
+obstacles (gate, burhs, battlements) on a core to make reaching it harder.
+**Two capture triggers, both already built:**
+- **Village / fortified town** (core = a producer): **taken when its garrison
+  is cleared** (existing village capture). Wrap a village in a gate + burhs for
+  a defended-but-lordless town — *no new code*.
+- **City** (core = a **jarl**, i.e. an enemy warlord): **taken when the jarl
+  dies.** The jarl is the city's heart, the assault's target, *and* a
+  win-condition warlord — so a city falls on the same `died` event the level
+  already tracks; no separate defender-counting. On the jarl's death the city
+  **falls** (open barriers, silence towers, garrison routs) 🕓; v0.2 flips it to
+  a friendly **super-village** (best producer on the map — the crown-jewel
+  prize). Every city has a jarl.
+
+**Fortress furniture** — obstacles on the way to the core, *none required to
+win*:
+- **Gate:** destructible structure (~500 HP), **meleeable by anyone**; blocks
+  the opening, removed at 0 HP. Optional 🕓: gate **spawns defenders while it
+  holds** (pressure clock).
+- **Burhs:** a garrison behind a barrier that **opens when the garrison is
+  cleared** (melee clears it). Not capturable — just defeated.
+- **Battlements:** wall-top archers, **destroyable by *ranged* only**. **Never
+  a required kill** — with jarl-capture you win by reaching the jarl, so
+  battlements are **optional attrition**. Counters: bows silence them, **Shield
+  Wall** (missile armour) tanks them, Steadfast buffs through, numbers absorb.
+  *Level-design rule: keep them painful-but-survivable for a melee approach —
+  never lethal enough to make bows mandatory.*
+- Indestructible walls funnel the assault to the gate. **Villages don't get
+  battlements** (city furniture only).
 
 ### 6.10 Churches ✅ / 🔶
 - ✅ Heal the warlord + retinue in range; host the unpaused ability-pick when
@@ -311,6 +334,25 @@ come (Option B, §6.6):** spending points to *upgrade a cooldown's depth*
 - HUD: selected warlord name, renown, HP, army size; three ability slots
   (READY / countdown / ACTIVE / LOCKED); longship countdown.
 - Health bars (warlords, recruits, gate); selection marker triangle.
+- **Cooldown display:** the selected warlord's three abilities as **radial
+  dials** (bottom-centre) that fill as they recover — arrow + name per slot.
+- **Warlord roster (bottom-right):** every player warlord as `[button] · health
+  ring · unit type`. The **ring sweeps down and green→red with HP**, so you see
+  at a glance **which warband is in trouble and which button switches to it**
+  (+ a HOLD marker when that warlord is holding). Face-button glyphs in the full
+  GUI.
+
+### 6.13b Squad Commands — Hold Stance 🕓 (v0.2)
+A per-warlord stance toggle (**tap** a shoulder button; retreat is the *held*
+one): **FOLLOW** (default) or **HOLD**. A held retinue **stands its ground** —
+holds near the warlord, strikes only enemies within range, and **never advances
+or charges** (suppresses the retaliation-charge). Ranged held units still fire
+at in-range targets without repositioning.
+- **Unlocks screening:** set Warlord A (Shield Wall) to Hold as a wall in front
+  of the battlements → switch to Warlord B → maneuver B's band past behind the
+  shields. One warband becomes a mobile fortification while another flanks.
+- Command set: move (stick) · select (face) · abilities (d-pad) · **hold (tap
+  shoulder)** · retreat (hold shoulder).
 
 ### 6.14b Retreat 🕓 (targeted for v0.25)
 The pressure-release valve for a losing fight — save the warlord, pay with
@@ -493,7 +535,30 @@ find is a decision, not a checkbox.
   Populate a level with any number of enemy warlords. ✅
 - **No defeat state by design** (endless longships). A defeat check would be
   added only for no-replacement hard levels. 🔶
-- 🕓 Results / continue screen after victory.
+- ✅ **LevelManager** hooks each enemy warlord's death: toasts progress
+  ("2 of 3 defeated") and shows a **victory/defeat panel** with stats (time,
+  warlords lost, army remaining) on the last kill / total loss; replay on (A).
+
+**Difficulty = two independent layers.**
+- **Unit balance** (caps + counters + armour, §15) makes matchups *readable and
+  counterable* — fixed design.
+- **Encounter/level balance** is a **level-design lever, not a fairness
+  target** — a 6-Seax band vs a 6-Axe burh is *meant* to lose head-on.
+- **The contract that keeps that fair: encounters must be *readable* and
+  *escapable*, not balanced.** The player reads a bad matchup *before*
+  committing (weapon silhouettes + counters) and can always pull out (soft
+  retreat via the AI's aggro-drop; formal retreat §6.14b), restock at a village,
+  find narrative buffs (§6.14), or bring another warlord / the right counter and
+  re-engage. **Persistence + tactics beats parity — grind does not** (death
+  costs time + renown).
+
+**v0.1 slice scope:** 4 player warlords; loadout → fight → win by killing all
+enemy warlords. *In:* movement, retinues, combat + armour, abilities (buffs +
+stun/knockback), villages/burhs/city-as-fortress, enemy **patrol AI** (waypoint
+steering, no navmesh), loadout screen, win/lose + toasts. *Deferred (documented,
+out of slice):* renown/veterancy, churches, longship respawn, formal retreat,
+hold stance, fog/morale, city-capture economy, real art. Enemy warlords in v0.1
+**don't use abilities** (leave their L/R empty).
 
 ---
 
