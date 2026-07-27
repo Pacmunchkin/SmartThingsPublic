@@ -566,3 +566,99 @@ design. Keep every system **toggleable-by-omission** (they already are).
 
 *Study their control and follower feel; not their pacing — the deliberate,
 slow buildup is a purposeful divergence.*
+
+## 14. Art Direction & Sprite Pipeline 🕓 (decisions locked, art not yet built)
+
+Gray-box now; this is the plan for when real sprites land. **Validated** on
+real asset-pack sprites (spear grunt, sword-and-shield grunt, warlord) with a
+Python/Pillow emulator that mirrors the Godot shader math — recolour,
+shuffle-bag variety, enemy contrast, and two-warband readability all confirmed
+in mock scenes.
+
+### 14.1 Core technique — single-sprite palette swap (no layers)
+Each unit is **one coloured sprite sheet** recoloured by a **palette-swap
+shader** — *not* stacked greyscale layers (rejected: too much art per frame).
+The shader recolours by **colour family**, so parts that differ in hue/sat
+(tunic vs trousers vs skin) recolour **independently** with no layering.
+
+- Per-region formula (preserves the sprite's own shading ramp):
+  `out_rgb = clamp(target_rgb × (pixel_luma / region_base_luma))`.
+- A pixel belongs to a region if its **hue + saturation** fall in that
+  region's window. **Neutrals** (dark outlines, metal, white trim — low S or
+  very low V) are left untouched.
+- Set the target colours **once at spawn** (uniform writes) — no per-frame CPU.
+
+**Region windows measured from the three test sprites** (thresholds for the
+shader):
+- **Spear grunt:** tunic = hue 330–360/0–10 & S>0.5 · skin = hue 10–45 & S
+  0.2–0.7 & V>0.5.
+- **Sword & shield:** livery (top + **helmet** + shield trim) = hue 335–360/0–8
+  & S>0.5 · trousers = hue 200–240 & S>0.5 · skin = hue 8–28 & S 0.25–0.55 &
+  V>0.6.
+- **Warlord:** robe = hue 325–360/0–12 & S>0.6 · skin = hue 0–25 & S 0.28–0.55
+  & V>0.55.
+
+*Helmet note:* on the sword-and-shield sprite the helmet is the **same red** as
+the tunic, so it recolours **with** the livery — desired (helmet + shield read
+as warband colour). Only a problem if a **fixed metal** helmet is wanted; that
+would be an **art** change (repaint it a distinct grey), not code.
+
+### 14.2 Colour bags — variety without clustering
+Randomise per unit at spawn by drawing from curated palettes via a **shuffle
+bag** (deal without replacement; reshuffle when empty) — guarantees spread, so
+you never get "three similar reds in a row" (Tetris-style bag). Independent
+bags: **skin** (~10 tones, pale→dark), **livery/tunic**, **trousers** (dark
+neutrals).
+
+- **Skin is basically free** and doesn't signal team — randomise on every NPC.
+- Curate palettes to be **visually distinct** (spread across hue). Optional
+  hue-family bag if keeping several shades of one colour.
+
+### 14.3 Team & warband colour scheme (readability)
+Two independent signals: **hue-family = team**, **specific colour = warband**.
+- **Players:** each warlord + his retinue **share one livery** (drawn from the
+  livery bag) → warbands are colour-coded for one-thumb multi-retinue control.
+  Recruits wear the **warlord's** colour (never the opposite). The **warlord**
+  is elevated by **size** (68² vs recruit 48²) + HUD (HP bar, selection marker,
+  ability shine) — **not** colour.
+- **Enemies:** **uniform red** tunic + random skin (red never blends /
+  universally reads hostile). The **enemy warlord** is recoloured **white or
+  near-black** to pop from his red horde (colour **and** size).
+- **Livery-bag rules:** **reserve red for enemies** (exclude from player bag);
+  **exclude hues near common terrain** (no forest-green on grass — it goes
+  muddy; blue/magenta/gold/teal/purple/orange all pop). Terrain-contrast is a
+  hard rule, learned from a green-on-grass test.
+
+### 14.4 Sprites needed
+- **6 recruit sheets** — one per weapon (seax, axe, sword & shield, spear, bow,
+  shield-wall). **The weapon silhouette *is* the unit-type readout** (replaces
+  the interim emoji marker) — read army composition at a glance.
+- **1 warlord sheet** — a single, more-armoured, larger "leader" look. No
+  warlord-per-weapon; his type is read from retinue + HUD.
+
+### 14.5 Animation
+**AnimatedSprite2D + SpriteFrames** (not AnimationPlayer — that's only worth it
+for a modular multi-layer rig). Named animations:
+`idle_ / walk_ / fight_ × up/down/left/right` (12), **or 9 with `flip_h`** to
+mirror the side view if the pack gives one side. The palette-swap shader is
+**one material** on the sprite → recolours whichever animation is playing.
+- Drive by velocity: dominant axis → facing; speed≈0 → `idle_<lastdir>`;
+  combat target → `fight_`.
+- **Combat = a stance pose**; keep the **artifact `Slash`/`Arrow`** effects as
+  the hit feedback → **no bespoke attack frames needed** to ship readable
+  combat ("before full animations, if ever").
+
+### 14.6 Deferred (paperdoll layers) 🕓
+Hair and masc/fem presentation are **later**. Code can **select + recolour**
+authored pieces, but it **cannot invent shapes** — hairstyles/beards/body
+types are **art**. If/when added: a small set of **hair overlay sprites**
+(pick 1 + recolour from a hair bag) does gender variety cheaply; **separate
+masc/fem body bases** are the big art lift and low priority. Get gender mostly
+from **hair**, not separate bodies.
+
+### 14.7 Performance
+The per-frame shader is **negligible** even for hundreds of 2D sprites. The
+only caveat: a **unique `ShaderMaterial` per unit** can break 2D batching at
+very high counts (more draw calls). **Escape hatch** (only if it ever bites):
+**bake the recolour to a texture once at spawn**, then use a plain sprite —
+no per-frame shader, fully batchable. Don't build this pre-emptively.
