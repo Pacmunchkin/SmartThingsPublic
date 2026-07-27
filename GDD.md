@@ -103,9 +103,15 @@ reserved for abilities. ✅
   attacking together and die to 6 (65 HP, 5 dmg, 1 hit/s). Retune as unit
   stats settle.
 - **Untargetable while the retinue lives** — enemies turn on the warlord
-  only once its retinue is defeated (except while *Warlord Leads* is active).
+  only once its retinue is defeated (except while *Rally Cry* is active, which
+  deliberately exposes the warlord — §6.4).
 - **Permadeath:** a dead warlord is gone for the run; its select slot dies
   unless a longship replacement is enabled.
+- **Move speed = 0.9 × its unit type's speed** (a fixed **base ~140** when it
+  has no unit type). Keeps the warlord just under its retinue's pace so it can
+  never outrun its own band, and makes **mobility a unit-type trait** (Seax
+  warbands skirmish, Axe warbands are slow juggernauts) — which drives the
+  retreat game (§6.14b) with no extra flee-speed code.
 
 ### 6.2 Recruits & Retinue ✅
 - One reusable `recruit.tscn` used everywhere (retinues, village/burh
@@ -155,16 +161,16 @@ ability** onto the whole retinue.
 Three slots per warlord (Up/Left/Right), each an ability asset. Cooldown +
 duration + magnitude + radius per ability.
 
-| Ability | Effect |
-|---|---|
-| Charge | Warlord + retinue move faster (sustained) |
-| Steadfast | All damage taken reduced (sustained) |
-| Knock Back | Shove + stun nearby enemies (instant) |
-| Warlord Leads | Warlord targetable but retinue healed & buffed (sustained) |
-| Advance | Melee hits shove enemies back — the line pushes forward (sustained) |
-| Draw Out | Force-taunt enemies onto your army — the feigned retreat (instant) |
-| Ditch | Ranged/arrow damage reduced (sustained) |
-| Call | Friendly villages send garrisons running to you (instant) |
+**Built-in signatures** (auto-fill the **Up** slot per unit type):
+
+| Signature | Unit | Effect | "When" |
+|---|---|---|---|
+| **Flurry** | Seax | +atk speed **then −atk speed (exhausted)** | commit-and-cost: blitz to finish; swing weak after |
+| **Shield Breach** | Axe | ignores a share of enemy armour | vs armour; wasted on light |
+| **Brace** | Spear | opening / anti-charge burst | reactive: right before impact |
+| **Shield Bash** | Sword & Shield | stun one enemy, **interrupts their ability** | hold-to-punish |
+| **Push Back** | Shield Wall | AoE shove + brief stun | break a charge, make space |
+| **Volley** | Bows | +fire rate **then reload (can't fire)** | commit-and-cost: unload on massed targets |
 
 **Cooldowns:** stored on the ability asset, counted down per-warlord
 per-slot; HUD shows READY / countdown / ACTIVE.
@@ -177,15 +183,24 @@ The three slots resolved into a **fixed identity + free choice** split:
 
 **Universal cooldowns** (picked in the War Council):
 
-| Ability | Effect | Status |
-|---|---|---|
-| Charge | +move speed (blocked if already in melee) | ✅ |
-| Steadfast | +armour (½ damage taken) − move speed | ✅ |
-| Rally Cry | retinue +damage & +defence | ✅ |
-| Knockback | shove + stun one enemy | ✅ |
-| Feigned Retreat | auto-retreat then counter | 🕓 needs retreat AI |
-| Scout | detach a scout, reveal fog | 🕓 needs fog of war |
-| Raise the Standard | plant banner, morale | 🕓 needs morale |
+| Universal | Effect | "When" | Status |
+|---|---|---|---|
+| Charge | **+move AND +attack speed** (usable anytime) | opportunity-cost: offense *or* escape | ✅ |
+| Steadfast | +armour (½ dmg taken) − move speed | commit: hold ground, can't flee | ✅ |
+| Rally Cry | retinue +dmg & +def, **warlord exposed** | risk: tip a knife-edge fight, risk the jarl | ✅ |
+| Knockback | shove + stun one enemy | reactive: peel / interrupt | ✅ |
+| Feigned Retreat | auto-retreat then counter | bait | 🕓 retreat AI |
+| Scout | detach a scout, reveal fog | info | 🕓 fog of war |
+| Raise the Standard | plant banner (can't move), morale | commit | 🕓 morale |
+
+**Commit-and-cost philosophy.** The strongest cooldowns leave a *punishable
+window* — the counterplay is built in: Flurry → **exhaustion**, Volley →
+**reload**, Rally → **exposed warlord**, Charge → **spent (can't also escape)**.
+Five "when" flavours across the roster — opportunity-cost (Charge), reactive
+(Shield Bash / Knockback / Brace / Push Back), commit (Steadfast / Standard),
+commit-and-cost (Flurry / Volley), risk/exposure (Rally). **Keep cost windows
+short & recoverable** (a learnable mistake, not an army-wipe); the reactive
+stuns + Steadfast stay the accessible low-risk picks.
 
 **Primitives:** **stun** (frozen + *interrupts active buffs*; spinning-star
 tell) and **knockback** (a decaying shove) — these unlock Shield Bash, Push
@@ -354,49 +369,37 @@ at in-range targets without repositioning.
 - Command set: move (stick) · select (face) · abilities (d-pad) · **hold (tap
   shoulder)** · retreat (hold shoulder).
 
-### 6.14b Retreat 🕓 (targeted for v0.25)
-The pressure-release valve for a losing fight — save the warlord, pay with
-half the army.
-- **Input:** hold **R** (a free shoulder button) for **3 s** → the selected
-  warlord retreats. The hold guards against accidents.
-- **Rearguard:** ~**50% of the retinue** (the half already closest to the
-  enemy) is left behind to hold — mechanically, their follow-target is
-  cleared so they hold position and fight (existing garrison behavior). The
-  warlord flees with the other 50% as a mobile escort.
-- **Pursuit:** while the rearguard lives, enemies are occupied with it. When
-  it falls, enemies within pursuit range give chase. Because the warlord is
-  untargetable while any retinue lives, the escort must be cut down before
-  the warlord is exposed — a running fight, a last chance.
-- **Flee speed:** the fleeing group (warlord + escort) is injured/spent:
-  `speed = (base + buffs) × 0.8`. Buffs stay active in retreat, so a saved
-  **speed buff is your escape hatch** — no buff → 0.8× vs pursuers' 1.0× (they
-  close the gap; a thin rearguard = caught); Charge 1.5× → 1.2× (clean
-  getaway). Escape abilities become dual-purpose (offense *and* escape).
-- **Player-controlled:** retreat is an **active chase you steer**, not
-  auto-path — route to safety yourself while the faster pursuers close. The
-  natural goal is a **friendly village** (safety *and* the rebuild point:
-  muster fresh recruits). **Escape resolves** on reaching a friendly village
-  **or** outrunning pursuers to a safe distance (they give up). While fleeing
-  the warlord + escort don't stop to fight (or they'd be left behind); if
-  overtaken, a running fight breaks out.
-- **Future idea** 🕓: fleeing into a friendly village could have its garrison
-  join the fight — a retreat that becomes an ambush.
-- **Renown cost:** retreat also drops renown by **1** (fleeing costs face —
-  the reputation/morale channel). Kept small so **one** retreat is
-  recoverable, while repeated ones compound. A renown drop can push the
-  warlord below an ability slot's threshold and **lock that slot** (via the
-  existing `is_slot_unlocked` gate) — the ability greys out until the renown
-  is re-earned (auto-recover; a "permanently removed, re-pick at church"
-  variant is a one-line change if wanted). It also lowers the renown HP
-  bonus.
-- **Economy fit:** trades the *recoverable* clock (army) to save the
-  *expensive* one (renown + build) — see §8. **Self-limiting:** each retreat
-  costs half the army + renown, and a recruit-less warlord can't retreat
-  safely, so it can't be spammed. A successful retreat keeps the warlord in
-  the level to regroup.
-- **Build note:** mostly reuse (rearguard = null follow-target; pursuit =
-  existing targeting/AI). New: hold-R input, the 50% split, a flee-state
-  (run to safety, don't stop to fight), the safe-distance check.
+### 6.14b Retreat 🕓 (targeted for v0.25 — emergent model)
+**No button — retreat is just leaving.** Walking the warlord away *is* the
+retreat; the cost and tension come from three rules, almost no new code.
+- **Rearguard = whoever's left behind.** You retreat *from a losing fight*,
+  where the enemy is doubling up and the whole retinue is engaged — so fleeing
+  **abandons your men** (that's why renown drops). A manageable fight leaves a
+  few free recruits trailing as escort. The split is emergent, not chosen.
+- **Leaderless → 0 damage.** A retinue recruit whose warlord is beyond a
+  **leash range** (~half a screen) deals **zero** damage — it dies at its
+  normal rate, *pins* its enemies (they can't chase while it lives), and buys
+  time it can't turn into a win. (Garrison recruits, led by a *structure*, keep
+  fighting — structures don't flee.) This one damage-gate **is** the whole
+  rearguard system, and it unifies with jarl-death routing. Rearguard size (=
+  how many were engaged when you ran) sets the head start; you pay for it in
+  dead men.
+- **Chase:** enemies finish the rearguard, *then* pursue if the warlord's in
+  range — governed by the **existing aggro/chase-cap** (tune duration live).
+- **Flee speed is emergent** — the warlord moves at **0.9× its unit-type
+  speed** (§6.1), so a slow Axe warband genuinely struggles to outrun fast
+  pursuers while a Seax warband skirmishes away. **Charge** (its move-speed
+  half) is the escape hatch — but a Charge you *spent winning* isn't there to
+  flee with (commit-and-cost, §6.4).
+- **Renown −1** when the retreat *completes* — the warlord breaks contact and
+  gets clear past a distance threshold (small repositioning doesn't count). Can
+  drop a level → locks an ability slot (existing gate).
+- **Economy fit:** trades the *recoverable* clock (army) for the *expensive*
+  one (renown + build), §8. **Self-limiting:** you lose the abandoned men +
+  renown and rejoin against a now-reinforced, alerted enemy — never free.
+- **v0.1** already has the "soft retreat" (walk off, the patrol AI drops
+  aggro); this is the v0.25 formalisation. New code is tiny: the leaderless
+  damage-gate, the warlord-speed derivation (§6.1), and the renown trigger.
 
 ### 6.14 Exploration & Discoverables 🕓
 Interactable things placed in the world to make traversal rewarding (and to
@@ -422,6 +425,16 @@ renown; it never raises max HP or heals — health comes only from the
 material channel (gear, food, rest).** Re-skinning a source is free — the
 mechanics are identical whether the fiction is "a sacrifice before battle"
 or "a cache of Frankish mail."
+
+**Multiplier vs flat — a hard rule (from simulation, §15.1).** Combat buffs are
+**multipliers** (×damage, ×attack-speed, ×defence): they preserve the armour
+counter-web and can never invert a matchup. **Flat** bonuses are reserved for
+**HP and armour points** (their natural unit). Crucially a **flat *damage***
+bonus *breaks armour* — a +2 lets a 2-dmg Seax punch straight through 2 armour
+it otherwise bounces off — so flat-damage / pierce is used **only** as a
+deliberate, signposted **armour-breaker** reward ("whetted blades / bodkin
+arrows"), never as a generic buff. So: **morale → multipliers; material → flat
+HP/armour** (plus the rare armour-breaker).
 
 **Reward taxonomy** — what a discovery can grant, what it serves, and how it
 usually wants to be tuned:
