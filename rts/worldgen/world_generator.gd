@@ -18,8 +18,6 @@ extends Node2D
 
 signal generation_finished(world: WorldData)
 
-const TREE_QUAD_SIZE := 44.0
-
 @export var map_size: Vector2i = Vector2i(1080, 1920):
 	set(value):
 		map_size = value
@@ -50,9 +48,6 @@ const TREE_QUAD_SIZE := 44.0
 
 var world: WorldData
 
-var _terrain_material: ShaderMaterial
-var _tree_material: ShaderMaterial
-var _tree_atlas: ImageTexture
 var _pending := false
 
 
@@ -112,132 +107,33 @@ func generate() -> void:
 
 
 # --- presentation -----------------------------------------------------------
+# All of it lives in WorldRenderer, shared with hand-authored LevelRoot scenes.
+# A generated world and a hand-built one produce the same WorldData, so they
+# have no business drawing it two different ways.
 
 func _apply_terrain() -> void:
-	var rect := get_node_or_null(terrain_rect_path) as ColorRect
-	if rect == null:
-		return
-	rect.size = Vector2(map_size)
-	rect.position = Vector2.ZERO
-
-	if _terrain_material == null:
-		_terrain_material = ShaderMaterial.new()
-		_terrain_material.shader = load("res://worldgen/shaders/terrain.gdshader")
-	rect.material = _terrain_material
-
-	_terrain_material.set_shader_parameter("field_map", TextureBaker.bake_field(world))
-	_terrain_material.set_shader_parameter("cover_map", TextureBaker.bake_cover(world))
-	_terrain_material.set_shader_parameter("map_size", Vector2(map_size))
-	_terrain_material.set_shader_parameter("grid_size", Vector2(world.cols, world.rows))
+	WorldRenderer.apply_terrain(get_node_or_null(terrain_rect_path) as ColorRect,
+		world, map_size)
 
 
 func _apply_trees() -> void:
-	var node := get_node_or_null(trees_path) as MultiMeshInstance2D
-	if node == null:
-		return
-
-	if _tree_atlas == null:
-		_tree_atlas = TextureBaker.bake_tree_atlas()
-	if _tree_material == null:
-		_tree_material = ShaderMaterial.new()
-		_tree_material.shader = load("res://worldgen/shaders/tree.gdshader")
-	_tree_material.set_shader_parameter("atlas", _tree_atlas)
-	_tree_material.set_shader_parameter("frames", 3.0)
-	node.material = _tree_material
-	# The atlas is sampled by the shader; the instance texture only has to
-	# supply UVs for the quad.
-	node.texture = _tree_atlas
-
-	var quad := QuadMesh.new()
-	quad.size = Vector2(TREE_QUAD_SIZE, TREE_QUAD_SIZE)
-
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_2D
-	multimesh.use_colors = true
-	multimesh.use_custom_data = true
-	multimesh.mesh = quad
-
-	var count := world.tree_positions.size()
-	multimesh.instance_count = count
-	multimesh.visible_instance_count = count
-
-	var jitter := RandomNumberGenerator.new()
-	jitter.seed = world_seed ^ 0x5EED
-
-	for i in count:
-		var position := world.tree_positions[i]
-		var scale := world.tree_scales[i]
-		var transform := Transform2D(world.tree_rotations[i], Vector2.ONE * scale,
-			0.0, position)
-		multimesh.set_instance_transform_2d(i, transform)
-
-		# Darker in the depths of the wood, and a touch cooler in the shade of
-		# the valley, so the canopy has some internal depth.
-		var c := world.cell_at(position)
-		var neighbours := _canopy_neighbours(c)
-		var depth := clampf(float(neighbours) / 8.0, 0.0, 1.0)
-		var tint := lerpf(1.06, 0.72, depth)
-		multimesh.set_instance_color(i, Color(tint, tint * 1.02, tint * 0.94, 1.0))
-
-		multimesh.set_instance_custom_data(i, Color(
-			float(world.tree_kinds[i]),
-			jitter.randf(),
-			jitter.randf(),
-			0.0))
-
-	node.multimesh = multimesh
+	WorldRenderer.apply_trees(get_node_or_null(trees_path) as MultiMeshInstance2D,
+		world, world_seed)
 
 
-func _canopy_neighbours(c: Vector2i) -> int:
-	var count := 0
-	for dy in range(-1, 2):
-		for dx in range(-1, 2):
-			if world.has_flag(c.x + dx, c.y + dy, WorldData.FOREST):
-				count += 1
-	return count
-
-
-## Villages become the map's capture points, so the mission layer has
-## something to fight over without anyone hand-placing it.
 func _apply_sectors() -> void:
-	var parent := get_node_or_null(sectors_path)
-	if parent == null:
-		return
-	for child in parent.get_children():
-		child.queue_free()
-
-	for i in world.villages.size():
-		var village: Dictionary = world.villages[i]
-		var sector := TacticalSector.new()
-		sector.name = "Sector%s" % String(village["name"]).replace(" ", "")
-		sector.sector_id = StringName("sector_%d" % i)
-		sector.display_name = village["name"]
-		sector.owner_faction = TacticalSector.Faction.NEUTRAL
-		sector.capture_seconds = 20.0
-		sector.reinforcement_bonus = 0.5
-		sector.mission_critical = bool(village["on_ford"])
-		sector.collision_layer = 4
-		sector.collision_mask = 48
-		sector.position = village["position"]
-
-		var shape := CollisionPolygon2D.new()
-		var radius: float = village["radius"] * 1.15
-		var points := PackedVector2Array()
-		for step in 12:
-			var angle := TAU * float(step) / 12.0
-			points.append(Vector2(cos(angle), sin(angle)) * radius)
-		shape.polygon = points
-		sector.add_child(shape)
-
-		parent.add_child(sector)
-		if Engine.is_editor_hint() and get_tree() != null:
-			var root := get_tree().edited_scene_root
-			if root != null:
-				sector.owner = root
-				shape.owner = root
+	var editor_owner: Node = null
+	if Engine.is_editor_hint() and get_tree() != null:
+		editor_owner = get_tree().edited_scene_root
+	WorldRenderer.apply_sectors(get_node_or_null(sectors_path), world, editor_owner)
 
 
 func _apply_sampler() -> void:
-	var sampler := get_node_or_null(sampler_path) as WorldSampler
+	# Assign the property rather than calling bind_world(). During the editor's
+	# first import pass an @tool script can run before every sibling script is
+	# registered, and the placeholder that stands in for WorldSampler answers
+	# has_method() truthfully but cannot actually dispatch the call. set() on a
+	# placeholder is a no-op, and the next rebuild binds it for real.
+	var sampler := get_node_or_null(sampler_path)
 	if sampler != null:
-		sampler.bind(world)
+		sampler.set(&"world", world)

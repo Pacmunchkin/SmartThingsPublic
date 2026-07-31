@@ -21,9 +21,9 @@ const MAX_INFLUENCE := 420.0
 
 static func run(world: WorldData) -> void:
 	_trace_channel(world)
-	_build_distance_field(world)
-	_choose_fords(world)
-	_clear_channel(world)
+	carve_channel(world, world.river_points, world.river_widths)
+	choose_fords(world)
+	clear_channel(world)
 
 
 static func _trace_channel(world: WorldData) -> void:
@@ -86,9 +86,8 @@ static func _trace_channel(world: WorldData) -> void:
 ## Distance to the centreline, and water depth inside the channel. Stamped
 ## per segment with a bounding box so the cost tracks the river's length
 ## rather than cells times segments.
-static func _build_distance_field(world: WorldData) -> void:
-	var points := world.river_points
-	var widths := world.river_widths
+static func carve_channel(world: WorldData, points: PackedVector2Array,
+		widths: PackedFloat32Array) -> void:
 	for i in range(points.size() - 1):
 		var a := points[i]
 		var b := points[i + 1]
@@ -126,7 +125,7 @@ static func _build_distance_field(world: WorldData) -> void:
 ## Fords are where the channel is locally narrowest. Roads will want them, and
 ## so will anyone flanking; picking them here means stages 4 and 5 can treat
 ## them as fixed facts about the map.
-static func _choose_fords(world: WorldData) -> void:
+static func choose_fords(world: WorldData) -> void:
 	var widths := world.river_widths
 	var points := world.river_points
 	var count := widths.size()
@@ -171,7 +170,7 @@ static func _choose_fords(world: WorldData) -> void:
 	world.note("river", "%d ford(s) at the narrows" % chosen.size())
 
 
-static func _clear_channel(world: WorldData) -> void:
+static func clear_channel(world: WorldData) -> void:
 	var removed := ForestStage.clear_where(world, func(point: Vector2) -> bool:
 		var c := world.cell_at(point)
 		return world.has_flag(c.x, c.y, WorldData.RIVER) \

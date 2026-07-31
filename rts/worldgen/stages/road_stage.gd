@@ -35,15 +35,17 @@ static func run(world: WorldData) -> void:
 	if world.villages.size() < 2:
 		world.note("roads", "fewer than two settlements; no network to build")
 		return
-	var cost := _build_cost(world)
+	var cost := build_cost(world)
 	var edges := _minimum_spanning_edges(world, cost)
 	_lay_edges(world, cost, edges)
 	_lay_road_out(world, cost)
-	_clear_verges(world)
+	var removed := clear_verges(world)
+	world.note("roads", "%d road(s), cleared %d trees from the verges"
+		% [world.roads.size(), removed])
 	LandscapeStage.recompute_slope(world)
 
 
-static func _build_cost(world: WorldData) -> PackedFloat32Array:
+static func build_cost(world: WorldData) -> PackedFloat32Array:
 	# Rough going: bog, stone, bramble. Without it the valley floor is a
 	# perfectly uniform plain, and a least-cost path across a uniform plain is
 	# a dead straight line - which is exactly what the roads looked like, and
@@ -84,11 +86,11 @@ static func _minimum_spanning_edges(world: WorldData,
 	var distance := {}
 	for a in count:
 		for b in range(a + 1, count):
-			var path := _astar(world, cost,
+			var path := solve_route(world, cost,
 				world.villages[a]["position"], world.villages[b]["position"])
 			# Rank by what the route actually costs to walk, not by how many
 			# cells it happens to pass through - a short climb is not a bargain.
-			var route := _route_cost(world, cost, path) if not path.is_empty() else -1.0
+			var route := route_cost(world, cost, path) if not path.is_empty() else -1.0
 			distance[Vector2i(a, b)] = route
 			distance[Vector2i(b, a)] = route
 
@@ -136,14 +138,14 @@ static func _lay_edges(world: WorldData, cost: PackedFloat32Array,
 		var from: Vector2 = world.villages[edge.x]["position"]
 		var to: Vector2 = world.villages[edge.y]["position"]
 		# Re-search on the live cost field so this road can join one already laid.
-		var path := _astar(world, cost, from, to)
+		var path := solve_route(world, cost, from, to)
 		if path.is_empty():
 			world.note("roads", "no route between %s and %s"
 				% [world.villages[edge.x]["name"], world.villages[edge.y]["name"]])
 			continue
-		var smoothed := _smooth(path)
+		var smoothed := smooth_route(path)
 		world.roads.append(smoothed)
-		_stamp(world, cost, smoothed)
+		stamp_route(world, cost, smoothed)
 		world.note("roads", "%s to %s, %d segments"
 			% [world.villages[edge.x]["name"], world.villages[edge.y]["name"],
 			   smoothed.size()])
@@ -170,18 +172,18 @@ static func _lay_road_out(world: WorldData, cost: PackedFloat32Array) -> void:
 				best_target = target
 	if best_village < 0:
 		return
-	var path := _astar(world, cost, world.villages[best_village]["position"], best_target)
+	var path := solve_route(world, cost, world.villages[best_village]["position"], best_target)
 	if path.is_empty():
 		return
-	var smoothed := _smooth(path)
+	var smoothed := smooth_route(path)
 	world.roads.append(smoothed)
-	_stamp(world, cost, smoothed)
+	stamp_route(world, cost, smoothed)
 	world.note("roads", "way out of the valley from %s"
 		% world.villages[best_village]["name"])
 
 
 ## Mark the corridor, grade it level and make it cheap for the next road.
-static func _stamp(world: WorldData, cost: PackedFloat32Array,
+static func stamp_route(world: WorldData, cost: PackedFloat32Array,
 		path: PackedVector2Array) -> void:
 	var reach := HALF_WIDTH + CLEAR_MARGIN
 	var cells := int(ceil(reach / float(world.cell))) + 1
@@ -232,20 +234,21 @@ static func _stamp(world: WorldData, cost: PackedFloat32Array,
 						total / float(n), 0.75)
 
 
-static func _clear_verges(world: WorldData) -> void:
+## Fell whatever is standing in the road. Returns the count so a caller can
+## report it; the generator logs a summary, a brush logs its own.
+static func clear_verges(world: WorldData) -> int:
 	var removed := ForestStage.clear_where(world, func(point: Vector2) -> bool:
 		var c := world.cell_at(point)
 		return world.has_flag(c.x, c.y, WorldData.ROAD))
 	ForestStage.refresh_forest_flags(world)
-	world.note("roads", "%d road(s), cleared %d trees from the verges"
-		% [world.roads.size(), removed])
+	return removed
 
 
 # --- pathfinding ------------------------------------------------------------
 
 ## Sum of per-cell cost along a route, weighted by the length of each step so
 ## diagonal moves are not counted as cheaply as orthogonal ones.
-static func _route_cost(world: WorldData, cost: PackedFloat32Array,
+static func route_cost(world: WorldData, cost: PackedFloat32Array,
 		path: PackedVector2Array) -> float:
 	var total := 0.0
 	for i in range(path.size() - 1):
@@ -258,7 +261,7 @@ static func _route_cost(world: WorldData, cost: PackedFloat32Array,
 
 
 
-static func _astar(world: WorldData, cost: PackedFloat32Array,
+static func solve_route(world: WorldData, cost: PackedFloat32Array,
 		from_world: Vector2, to_world: Vector2) -> PackedVector2Array:
 	var start_cell := world.cell_at(from_world)
 	var goal_cell := world.cell_at(to_world)
@@ -341,7 +344,7 @@ static func _reconstruct(world: WorldData, came: PackedInt32Array, goal: int,
 
 ## Chaikin corner cutting. The grid path is a staircase; two passes are enough
 ## to make it read as a worn track without pulling it off the pass it found.
-static func _smooth(path: PackedVector2Array) -> PackedVector2Array:
+static func smooth_route(path: PackedVector2Array) -> PackedVector2Array:
 	var current := path
 	for _pass in 2:
 		if current.size() < 3:

@@ -18,7 +18,25 @@ const KIND_ASH := 1
 const KIND_THORN := 2
 
 
+## Whole-map wildwood. The brush-authored equivalent is ForestBrush, which
+## calls plant() with a polygon instead of the full extent.
 static func run(world: WorldData) -> void:
+	world.tree_positions = PackedVector2Array()
+	world.tree_scales = PackedFloat32Array()
+	world.tree_rotations = PackedFloat32Array()
+	world.tree_kinds = PackedByteArray()
+	var planted := plant(world, PackedVector2Array(), SPACING, GLADE_THRESHOLD, 1.0)
+	world.note("forest", "%d trees over %d x %d px"
+		% [planted, world.size_px.x, world.size_px.y])
+
+
+## Scatter trees across `region` (empty = the whole map), appending to whatever
+## is already standing. Returns how many were planted.
+##
+## Appending rather than replacing is what lets a hand-authored level drop
+## several Forest brushes with different species mixes and have them coexist.
+static func plant(world: WorldData, region: PackedVector2Array, spacing: float,
+		glade_threshold: float, scale_multiplier: float) -> int:
 	var density := FastNoiseLite.new()
 	density.seed = world.rng.randi()
 	density.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
@@ -34,12 +52,14 @@ static func run(world: WorldData) -> void:
 	species.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	species.frequency = 0.0016
 
+	# Accumulate locally and splice once at the end. Appending to the world's
+	# Packed arrays per trunk reallocates thousands of times and cost more than
+	# the scatter itself.
 	var positions := PackedVector2Array()
 	var scales := PackedFloat32Array()
 	var rotations := PackedFloat32Array()
 	var kinds := PackedByteArray()
-
-	var step := SPACING
+	var step := maxf(spacing, 4.0)
 	var cols := int(ceil(float(world.size_px.x) / step))
 	var rows := int(ceil(float(world.size_px.y) / step))
 
@@ -57,12 +77,15 @@ static func run(world: WorldData) -> void:
 					or point.y > float(world.size_px.y) - 4.0:
 				continue
 
+			if not region.is_empty() and not Geometry2D.is_point_in_polygon(point, region):
+				continue
+
 			var d := density.get_noise_2dv(point) * 0.5 + 0.5
-			if d < GLADE_THRESHOLD:
+			if d < glade_threshold:
 				continue
 			# Thin the canopy toward the edge of a glade instead of ending it
 			# with a hard line.
-			var edge := smoothstep(GLADE_THRESHOLD, GLADE_THRESHOLD + 0.18, d)
+			var edge := smoothstep(glade_threshold, glade_threshold + 0.18, d)
 			if world.rng.randf() > edge:
 				continue
 
@@ -79,7 +102,7 @@ static func run(world: WorldData) -> void:
 				KIND_ASH: scale = world.rng.randf_range(0.78, 1.10)
 				_: scale = world.rng.randf_range(0.48, 0.72)
 			# Bigger trees where the canopy is densest - crowding reads as depth.
-			scale *= lerpf(0.86, 1.12, d)
+			scale *= lerpf(0.86, 1.12, d) * scale_multiplier
 
 			positions.append(point)
 			scales.append(scale)
@@ -89,12 +112,11 @@ static func run(world: WorldData) -> void:
 			var c := world.cell_at(point)
 			world.set_flag(c.x, c.y, WorldData.FOREST)
 
-	world.tree_positions = positions
-	world.tree_scales = scales
-	world.tree_rotations = rotations
-	world.tree_kinds = kinds
-	world.note("forest", "%d trees over %d x %d px"
-		% [positions.size(), world.size_px.x, world.size_px.y])
+	world.tree_positions.append_array(positions)
+	world.tree_scales.append_array(scales)
+	world.tree_rotations.append_array(rotations)
+	world.tree_kinds.append_array(kinds)
+	return positions.size()
 
 
 ## Remove every tree for which `should_clear` returns true. Later stages call

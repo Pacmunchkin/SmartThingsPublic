@@ -17,7 +17,7 @@ const CLIFF_COVER_REACH := 26.0  ## How far from a rock face you still get it.
 var world: WorldData
 
 
-func bind(data: WorldData) -> void:
+func bind_world(data: WorldData) -> void:
 	world = data
 
 

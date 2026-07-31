@@ -11,25 +11,38 @@ extends SceneTree
 ## Runs under xvfb-run on a headless box; needs a GL context, so plain
 ## --headless will not do.
 
-const SCENE := "res://worldgen/generated_world.tscn"
+const DEFAULT_SCENE := "res://worldgen/generated_world.tscn"
 const WARMUP_FRAMES := 12
 
 
 func _initialize() -> void:
 	var options := _parse_arguments()
-	var scene: Node = load(SCENE).instantiate()
+	var path: String = options.get("scene", DEFAULT_SCENE)
+	var scene: Node = load(path).instantiate()
 
+	# Works for either kind of level: the procedural generator or a
+	# brush-authored LevelRoot. Both expose map_size and both build in _ready.
 	var generator := scene as WorldGenerator
 	if generator != null:
 		generator.verbose = true
 		if options.has("seed"):
 			generator.world_seed = int(options["seed"])
+	var level := scene as LevelRoot
+	if level != null:
+		level.verbose = true
+		if options.has("seed"):
+			level.level_seed = int(options["seed"])
 	root.add_child(scene)
 
 	# Frame the whole map rather than whatever the scene's camera was left on.
 	var camera := scene.get_node_or_null("Camera") as Camera2D
-	if camera != null and generator != null:
-		camera.position = Vector2(generator.map_size) * 0.5
+	var extent := Vector2(1080, 1920)
+	if generator != null:
+		extent = Vector2(generator.map_size)
+	elif level != null:
+		extent = Vector2(level.map_size)
+	if camera != null:
+		camera.position = extent * 0.5
 		camera.zoom = Vector2.ONE
 
 	_capture.call_deferred(options.get("out", "preview.png"))

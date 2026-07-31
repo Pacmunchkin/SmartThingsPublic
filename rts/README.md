@@ -16,7 +16,7 @@ Press **R** while playing to regenerate with a new seed.
 
 ## 1. The generated level
 
-`worldgen/generated_world.tscn` is the main scene. It builds a 1080 × 1920
+`worldgen/generated_world.tscn` builds a 1080 × 1920
 valley in five stages, in this order, and the order is the whole design:
 
 | # | Stage | File | What it does |
@@ -102,7 +102,131 @@ index is `flat` — interpolating it blends two species together at the atlas se
 
 ---
 
-## 3. Gameplay queries
+## 3. Authoring your own level (`levels/level_1.tscn`)
+
+Open `levels/level_1.tscn` and drag things about — it rebuilds as you edit.
+
+Every feature is a **brush**: a node that paints into one shared `WorldData`
+grid. `LevelRoot` walks its descendants and calls `apply(world)` on each, so
+**tree order is layer order** — drag a node above another and it paints first.
+Group brushes under plain `Node2D`s for tidiness; the walk is depth-first, so a
+group behaves exactly like its contents inlined.
+
+```
+Level1                (LevelRoot)      map_size, cell_size, level_seed
+├── Forest            (ForestBrush)    no polygon = the whole map
+├── River             (RiverBrush)     └── Path2D   ← drag the handles
+├── Hills
+│   ├── WestValleyWall (ScarpBrush)    └── Path2D
+│   ├── EastValleyWall (ScarpBrush)    └── Path2D
+│   └── NorthKnoll     (HillBrush)     └── Polygon2D
+├── Clearings
+│   └── RiversideMeadow (ClearingBrush) └── Polygon2D
+├── Settlements
+│   ├── Upperford      (SettlementBrush)  ← just drag the node
+│   ├── Nethertun      (SettlementBrush)
+│   └── Stanwic        (SettlementBrush)
+├── Roads
+│   ├── UpperfordToNethertun (RoadBrush)  SOLVE
+│   ├── NethertunToStanwic   (RoadBrush)  SOLVE
+│   └── WayOutOfTheValley    (RoadBrush)  SOLVE + to_map_edge
+├── Terrain           (ColorRect)      ← the shader draws here
+├── Trees             (MultiMeshInstance2D)
+├── Sectors           (Node2D)         ← capture points appear here
+└── WorldSampler      (Node)
+```
+
+| Brush | Shape child | What it does |
+|---|---|---|
+| `ForestBrush` | `Polygon2D` *(optional)* | Plants wildwood. No polygon = whole map. Several can coexist with different spacing/species. |
+| `RiverBrush` | `Path2D` | Carves a channel along the curve, widening source→mouth, clears channel and banks, places fords at the narrows. |
+| `HillBrush` | `Polygon2D` | Raises (or with a negative height, sinks) ground. The polygon is the **top**; `falloff` is how far the slope runs out. |
+| `ScarpBrush` | `Path2D` | A **step** in the ground — different height each side of the line. Valley walls, escarpments, terrace edges. |
+| `ClearingBrush` | `Polygon2D` | Fells trees, feathered at the edge. Optionally marks the ground worked. |
+| `SettlementBrush` | *(none — drag the node)* | Clears, levels, marks core and fields, and registers a capture point. |
+| `RoadBrush` | `Path2D` *(DRAWN mode)* | `SOLVE`: A* between two named settlements. `DRAWN`: follows your curve exactly. |
+
+### "Which part is uphill?"
+
+You never say. You set a **height**, and slope is the gradient of the height
+field — so which way is up is a consequence of the numbers, not a declaration.
+That is the same rule everywhere, which is why a hill steep enough becomes an
+impassable cliff on its own: `LevelRoot` recomputes the gradient after every
+height brush and marks anything past `LandscapeStage.CLIFF_SLOPE`.
+
+A `Curve2D` on its own genuinely cannot express a hill — a line has no up. What
+it *does* have is two sides, and that is what `ScarpBrush` uses: `height_left`
+and `height_right`, with the ground stepping between them over `run` px. Short
+run = cliff, long run = walkable hillside.
+
+**Left and right are relative to the direction the curve is drawn**, as if
+walking it from first point to last. In the example level both valley walls are
+`height_right`-high, because one is drawn north→south and the other
+south→north. If you get it backwards, swap the two numbers or reverse the
+curve — either works.
+
+### Roads: solved or drawn
+
+`SOLVE` runs A* over the real cost of the ground (climbing expensive, wading
+worse, wood a nuisance, **an existing road nearly free**) between two
+settlements looked up by `settlement_name`. Put a road *below* another in the
+tree and it will join it and share a stretch rather than running parallel.
+
+`DRAWN` follows a `Path2D` exactly — for when the route is a design decision
+rather than a logistics one.
+
+A road can only find settlements placed **above** it in the tree. That is the
+layer order doing its job: a road cannot lead to a village that does not exist
+yet.
+
+### Writing a new brush
+
+```gdscript
+@tool
+class_name PalisadeBrush
+extends WorldBrush
+
+func apply(world: WorldData) -> void:
+    var line := curve_points()      # or polygon_points()
+    ...
+
+func affects_height() -> bool:
+    return false                     # true if you write world.height
+```
+
+`WorldBrush` gives you `polygon_points()`, `curve_points()`,
+`for_each_cell_near()`, `clear_trees()`, `distance_to_polyline()` and
+`side_of_polyline()` — that last one is how anything one-sided (a ditch's spoil
+bank, a wall's fighting step) tells inside from outside without the author
+labelling it.
+
+### Where palisades, gates, tents and walls fit
+
+They split into two kinds, and it matters which:
+
+**Field brushes** change the grid, like the ones above. Earthworks and ditches
+belong here: they are terrain, they move height, and `WorldSampler` already
+reports cover and passability from the grid. An earthwork brush is a
+`ScarpBrush` with a ditch on one side and a bank on the other.
+
+**Object placers** emit discrete `CoverVolume` nodes. Palisades, brick walls,
+gates, doors, tents, farmstead buildings all belong here, because each is a
+*thing* with its own integrity, flammability and garrison — and `CoverVolume`
+already models all of that, including directional protection, burning and
+degrading a class at a time under fire.
+
+Which means there are really only two placers to write, not eight:
+
+- **stamp cover along a curve** → palisade, brick wall, hedge, revetment. A gate
+  is a gap in the run with its own destructible volume.
+- **stamp cover over a footprint** → tent, hut, barn, gatehouse, farmstead.
+
+Both should emit into a `Cover` node the way settlements emit into `Sectors`,
+so the combat layer sees exactly what the hand-authored Athelney map gives it.
+
+---
+
+## 4. Gameplay queries
 
 A generated map can't use one `Area2D` per piece of cover — there are thousands
 of trees and the cliff line is a raster, not a polygon. `worldgen/world_sampler.gd`
@@ -125,7 +249,7 @@ flagged `mission_critical`.
 
 ---
 
-## 4. The runtime layer (`scripts/`)
+## 5. The runtime layer (`scripts/`)
 
 Shared by generated and hand-authored maps.
 
@@ -146,7 +270,7 @@ Scale: **1 px = 0.1 m**.
 
 ---
 
-## 5. The hand-authored example mission
+## 6. The hand-authored example mission
 
 `missions/m04_athelney/` is a scripted three-act mission built by hand before
 the generator existed — *The Causeway at Æthelinga Īeg*, Somerset Levels,
@@ -169,7 +293,7 @@ does nothing at minute six.
 
 ---
 
-## 6. Tuning
+## 7. Tuning
 
 Most knobs are constants at the top of each stage.
 
@@ -189,12 +313,17 @@ a loading screen.
 
 ---
 
-## 7. Rendering a preview
+## 8. Rendering a preview
 
 ```
 xvfb-run -a godot --path rts --rendering-driver opengl3 \
   --resolution 1080x1920 --script tools/capture_preview.gd -- \
   --seed 777 --out preview.png
+
+# a hand-authored level instead
+xvfb-run -a godot --path rts --rendering-driver opengl3 \
+  --resolution 1080x1920 --script tools/capture_preview.gd -- \
+  --scene res://levels/level_1.tscn --out level1.png
 ```
 
 Needs a GL context, so plain `--headless` won't do. Useful in CI: a seed that
@@ -212,4 +341,7 @@ see, not read about.
   The archetypes in `factions/` are stat blocks, not scenes.
 - **Roads still show occasional right-angle corners** where the cost field ties
   and A* picks an axis. Chaikin smoothing softens but doesn't remove it.
-- Generation is single-threaded and blocking.
+- Generation is single-threaded and blocking. A hand-authored level rebuild is
+  ~7 s at `cell_size = 6`; each RoadBrush rebuilds the whole cost field, which
+  is the obvious thing to cache next.
+- No cover placers yet, so palisades, walls, gates and tents are still to come.

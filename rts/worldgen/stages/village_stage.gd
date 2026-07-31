@@ -230,49 +230,60 @@ static func _settle(world: WorldData) -> void:
 		return
 
 	for village in world.villages:
-		var centre: Vector2 = village["position"]
-		var radius: float = village["radius"]
-		var field: float = village["field_radius"]
-		var cells := int(ceil(field / float(world.cell))) + 1
-		var origin := world.cell_at(centre)
+		settle_one(world, village)
 
-		# Level the core toward the site's own height so buildings sit true,
-		# feathering out so the village does not end in a step.
-		var target := world.height[world.idx(origin.x, origin.y)]
-		for dy in range(-cells, cells + 1):
-			for dx in range(-cells, cells + 1):
-				var cx := origin.x + dx
-				var cy := origin.y + dy
-				if not world.in_bounds(cx, cy):
-					continue
-				var index := world.idx(cx, cy)
-				if (world.flags[index] & WorldData.RIVER) != 0:
-					continue
-				var d := world.cell_centre(cx, cy).distance_to(centre)
-				if d > field:
-					continue
-				var pull := 1.0 - smoothstep(radius * 0.6, field, d)
-				world.height[index] = lerpf(world.height[index], target, pull * 0.9)
-				world.flags[index] &= ~WorldData.CLIFF
-				if d <= radius:
-					world.flags[index] |= WorldData.VILLAGE
-				else:
-					world.flags[index] |= WorldData.FIELD
+	var removed := clear_around(world, world.villages)
+	world.note("villages", "%d settlements, cleared %d trees for houses and fields"
+		% [world.villages.size(), removed])
 
+
+## Level, clear and mark the ground for a single settlement. SettlementBrush
+## calls this directly for a hand-placed village.
+static func settle_one(world: WorldData, village: Dictionary) -> void:
+	var centre: Vector2 = village["position"]
+	var radius: float = village["radius"]
+	var field: float = village["field_radius"]
+	var cells := int(ceil(field / float(world.cell))) + 1
+	var origin := world.cell_at(centre)
+
+	# Level the core toward the site's own height so buildings sit true,
+	# feathering out so the village does not end in a step.
+	var target := world.height[world.idx(origin.x, origin.y)]
+	for dy in range(-cells, cells + 1):
+		for dx in range(-cells, cells + 1):
+			var cx := origin.x + dx
+			var cy := origin.y + dy
+			if not world.in_bounds(cx, cy):
+				continue
+			var index := world.idx(cx, cy)
+			if (world.flags[index] & WorldData.RIVER) != 0:
+				continue
+			var d := world.cell_centre(cx, cy).distance_to(centre)
+			if d > field:
+				continue
+			var pull := 1.0 - smoothstep(radius * 0.6, field, d)
+			world.height[index] = lerpf(world.height[index], target, pull * 0.9)
+			world.flags[index] &= ~WorldData.CLIFF
+			if d <= radius:
+				world.flags[index] |= WorldData.VILLAGE
+			else:
+				world.flags[index] |= WorldData.FIELD
+
+
+## Fell the wood for a set of settlements, thinning toward the field edge so
+## the clearing does not end as a shaved circle.
+static func clear_around(world: WorldData, villages: Array) -> int:
 	var removed := ForestStage.clear_where(world, func(point: Vector2) -> bool:
-		for village in world.villages:
+		for village in villages:
 			var centre: Vector2 = village["position"]
 			var d := point.distance_to(centre)
 			var core: float = village["radius"]
 			var edge: float = village["field_radius"]
 			if d <= core:
 				return true
-			# Thin the wood out toward the field edge rather than ending it
-			# with a shaved circle.
 			if d <= edge:
 				var t: float = (d - core) / maxf(edge - core, 0.001)
 				return world.rng.randf() > t * t
 		return false)
 	ForestStage.refresh_forest_flags(world)
-	world.note("villages", "%d settlements, cleared %d trees for houses and fields"
-		% [world.villages.size(), removed])
+	return removed

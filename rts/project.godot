@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Wessex — Squad Tactics"
 config/description="Scripted-campaign squad tactics in 9th century Britain. Continuous-space cover, no base building."
-run/main_scene="res://worldgen/generated_world.tscn"
+run/main_scene="res://levels/level_1.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
 [display]
