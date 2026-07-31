@@ -20,8 +20,8 @@ Anglo-Saxon England.
 
 **Elevator pitch:** *You are a Viking warlord. Sail in, gather a warband
 from the villages you conquer, and carve through burhs and cities to break
-the kingdom — but every warlord who falls is gone, replaced only by a raw
-newcomer off the next longship.*
+the kingdom — but every warlord who falls is gone for the raid, and a total
+wipe sends you back to the start of the level.*
 
 ---
 
@@ -29,11 +29,12 @@ newcomer off the next longship.*
 
 1. **Lead from the front.** You *are* a unit on the field, not a god-cursor.
 2. **The warband is your power.** Strength comes from the retinue you gather
-   and the renown your warlords earn — not from base-building.
+   and the hacksilver you plunder to arm and level them — not base-building.
 3. **Deliberate, weighty conquest.** Slow buildup to big battles; movement
    should be engaging in itself ("Skyrim-level" traversal feel). 🕓
-4. **Meaningful permadeath, humane recovery.** Losing a warlord hurts; a
-   total wipe never costs the campaign (checkpoint contract). 🔶
+4. **Meaningful permadeath, humane recovery.** Losing a warlord hurts (and
+   spurs the survivors' revenge boon); a total wipe just restarts the level
+   (§9), never the campaign.
 5. **Historically grounded.** Mechanics map to real 9th-century warfare.
 6. **Gamepad-first.** Designed for a controller from day one.
 
@@ -51,13 +52,13 @@ Nearly every core system has a primary-source anchor:
 | Burhs at choke points | Alfred's fortified towns (Burghal Hidage garrison quotas) |
 | Spears as baseline troop | The spear was the most common Viking weapon |
 | Shield & Sword as elite | Swords were prestige weapons of the sworn *hird* |
-| Draw Out ability | The feigned retreat, a documented Viking deception |
-| Knock Back ability | *Svinfylking* (boar's-snout wedge) splitting a shield wall |
+| Feigned Retreat ability | The feigned retreat, a documented Viking deception |
+| Knockback / Push Back | *Svinfylking* (boar's-snout wedge) splitting a shield wall |
 | Steadfast ability | The *skjaldborg* (shield wall) |
-| Warlord Leads ability | Chieftains fighting under the raven banner (*merki*); morale tied to the banner and the man |
-| Ditch ability | Fortified ditched camps (Repton, 873; Irish *longphorts*) |
-| Call ability | The war-arrow (*herör*) summons; Alfred's fyrd rotation |
-| Longship replacements | The "Great Summer Army" reinforcing by ship, 871 |
+| Rally Cry / Raise the Standard | Chieftains under the raven banner (*merki*); morale tied to the banner and the man |
+| Brace (spears) | The braced spear-hedge receiving a charge |
+| Muster (villages) | The war-arrow (*herör*) summons; Alfred's fyrd rotation |
+| Hacksilver economy | Silver hoards & hack-silver bullion funding the host |
 
 ---
 
@@ -70,8 +71,8 @@ Nearly every core system has a primary-source anchor:
    your retinue. ✅
 4. **Fight** — engage enemy garrisons and warbands in Bad North-style
    pairing combat. ✅
-5. **Grow** — earn renown from deeds; heal and level up abilities at
-   churches. ✅
+5. **Grow** — plunder **hacksilver**; heal at churches; upgrade warlords,
+   cooldowns & gear between levels (§6.5). ✅
 6. **Break** — assault burhs (choke points) and the city (gate +
    battlements). ✅
 7. **Win** — defeat the last enemy warlord. ✅
@@ -105,8 +106,8 @@ reserved for abilities. ✅
 - **Untargetable while the retinue lives** — enemies turn on the warlord
   only once its retinue is defeated (except while *Rally Cry* is active, which
   deliberately exposes the warlord — §6.4).
-- **Permadeath:** a dead warlord is gone for the run; its select slot dies
-  unless a longship replacement is enabled.
+- **Permadeath:** a dead warlord is gone for the level (no mid-level respawn);
+  survivors gain the revenge boon, and a total wipe restarts the level (§6.11).
 - **Move speed = 0.9 × its unit type's speed** (a fixed **base ~140** when it
   has no unit type). Keeps the warlord just under its retinue's pace so it can
   never outrun its own band, and makes **mobility a unit-type trait** (Seax
@@ -234,56 +235,35 @@ exploitable triggers** (predictable enough to *bait* — Souls-boss style, not
 optimal). Late-game warlords should **hold their stun to interrupt the
 player's buffs** rather than open with it — "the boss punishes your buttons."
 
-### 6.5 Renown & Ability Levels (Veterancy)
-**Two stacked layers.** Renown is career XP; Ability Level is the tier you
-spend. ✅ **Implemented (v0.25):** float renown, deed values, level
-thresholds, level-derived buffs, and slot-unlock-by-level. 🔶 **Still to
-come (Option B, §6.6):** spending points to *upgrade a cooldown's depth*
-(the branching component trees) — for now a level only unlocks the 3 slots.
-(Numbers below are vertical-slice pacing — the real game progresses slower.)
+### 6.5 Hacksilver & Progression 🕓 (replaces the renown system)
+**Hacksilver is the single currency** — a shared treasury, not per-warlord XP.
+- **Earned:** a lump on **level victory** (with a decaying first-clear bonus —
+  §9), and from some **in-level NPC interactions**.
+- **Spent between levels** (in the War Council / upgrade screen, §6.12) on:
+  - **Level up a warlord** — HP and stats.
+  - **Buy cooldowns** — unlock abilities for the Left/Right slots (§6.6).
+  - **Buy armour & weapons** — the unit-stat upgrades (armour points, damage —
+    plugs straight into §15).
+  - **Upgrade fresh recruits/warlords** — **early levels cost less** to upgrade,
+    so a replacement (after a permadeath, §6.11) **catches up quickly**; costs
+    scale up later so power isn't free forever.
+- **In-level:** silver may be **spent *or* earned** in NPC interactions (bribes,
+  hire, buy passage/info, plunder) — see §6.14 + interaction tracking (§6.15).
 
-- **Renown = career XP** — a running float, per-warlord, persists across the
-  campaign (longship newbies start at 0), effectively uncapped. Earned by
-  deeds only (never by waiting):
-
-  | Deed | Renown | Deed | Renown |
-  |---|---|---|---|
-  | Enemy recruit | 0.1 | City | 5 |
-  | Village | 1 | Enemy warlord | 10 |
-  | Burh | 3 | **Retreat** | **−1** |
-
-  (A single enemy-warlord kill = instant max level — "slay their champion,
-  come into your power." Recruits/villages are the minor trickle.)
-
-- **Ability Level (1–6) = tier derived from renown thresholds:**
-
-  | Level | 1 | 2 | 3 | 4 | 5 | 6 |
-  |---|---|---|---|---|---|---|
-  | Renown | 0 | 1 | 3 | 5 | 7 | 10 |
-
-- **Level drives everything** — passive buffs *and* ability points:
-  - Buffs scale with **level** (not raw renown, or they'd explode at
-    renown 10+): warlord +10% max HP / level; retinue +5% max HP, +2% speed
-    / level. Bounded at level 6.
-  - **1 ability point per level** (§6.6).
-- Retreat's −1 renown can drop a level → removes a point (locks/downgrades a
-  cooldown) and lowers the buffs.
+Progression is now **player-directed spending** (craft your build) instead of
+automatic XP tiers — more roguelike, and it deletes the renown book-keeping.
 
 ### 6.6 Ability Upgrade Trees 🔶 (Option B — component system)
 - An ability becomes a **list of effect-components**, each with a type,
   magnitude, and `min_level`. Enables **branching upgrade trees** and unique
   warlord builds (e.g. Charge L2 gains knockback, L3 gains damage).
-- **Points economy:** each **Ability Level** (§6.5) grants **1 point**, spent
-  as **add a new cooldown OR upgrade an existing one** — breadth vs depth.
-  With **3 d-pad slots** (max 3 cooldowns) and **6 points** at max level, a
-  curve emerges free: **early points buy breadth** (three tools by level 3),
-  **points 4–6 force depth** (out of slots → upgrade). "At level 3: three
-  cooldowns *or* one cooldown at level 3."
-- **Renown funds levels; it isn't equal to them.** The warlord tracks each
-  cooldown's level separately (so players build differently); the shared
-  asset holds the per-level component table. Points are spent at churches;
-  a renown loss (retreat) that drops a level locks/downgrades a cooldown.
-- Supersedes the interim fixed-3-slots-at-renown model in the current code.
+- **Silver economy:** **hacksilver (§6.5) buys** either **a new cooldown** (fill
+  an empty L/R slot) **or a level in an existing one** — breadth vs depth. With
+  **3 d-pad slots**, early silver buys **breadth** (three tools), then you're
+  **out of slots → depth** (upgrade what you have). Each cooldown levels
+  separately (players build differently); the shared ability asset holds the
+  per-level component table.
+- Supersedes the interim fixed-3-slots model in the current code.
 
 ### 6.7 Villages ✅
 - Produce a recruit every 10s up to a 25 garrison cap.
@@ -328,26 +308,37 @@ win*:
 - Indestructible walls funnel the assault to the gate. **Villages don't get
   battlements** (city furniture only).
 
-### 6.10 Churches ✅ / 🔶
-- ✅ Heal the warlord + retinue in range; host the unpaused ability-pick when
-  a renown-unlocked slot is empty.
-- 🔶 **Checkpoint save point** (see §9): bank progress; reload point on wipe.
+### 6.10 Churches ✅ / 🕓
+- ✅ Heal the warlord + retinue in range.
+- 🕓 Possible **in-level silver NPC** (a monk who sells a blessing/relic, or is
+  plundered for hacksilver) — an interaction node (§6.14 / §6.15).
+- (Checkpointing is **no longer church-based** — the *level itself* is the retry
+  unit; see §9.)
 
-### 6.11 Longship Replacements ✅
-- On a warlord's death, after a delay, a **renown-0 replacement** with a
-  drawn name lands at a dock marker, fills the empty slot, and gets an
-  arrival loadout. Endless — the cost of death is renown lost + time + the
-  march back.
-- 🔶 A level can disable replacements (empty "Warlord Scene") for a
-  **true-permadeath hard level**.
+### 6.11 Warlord Lifecycle 🕓 (replaces longship replacements)
+- **Start each level** with the warlords set in the loadout.
+- **In-level death is permadeath** — a fallen warlord is gone for that level;
+  you fight on shorthanded. **No mid-level respawn.**
+- **Revenge boon:** when a warlord falls, the **survivors gain a boon** to help
+  finish the level, **escalating with each death** — the last warlord standing
+  has the biggest boost. A comeback/rubber-band that keeps a bad run winnable
+  and dramatic ("avenge them!"). Also softens the loss without a respawn.
+- **Total wipe → restart the level** from its start state (§9) — the level is
+  the retry unit.
+- **Between levels:** empty roster slots are **filled with fresh recruits/
+  warlords** for the next loadout — cheap to upgrade with silver early (§6.5),
+  so a rebuilt roster catches up fast.
 
-### 6.12 War Council (Loadout Menu) ✅
+### 6.12 War Council (Loadout & Upgrade Menu) ✅ / 🕓
 - Pauses at level start; walks each warlord through choosing a unit type +
-  first ability. Also hosts the unpaused church and longship-arrival picks.
+  first ability, and shows the level objective (enemy-warlord count).
+- 🕓 **Between levels it's also the upgrade/spend screen** — fill empty roster
+  slots with fresh recruits and spend **hacksilver** (§6.5) on warlord levels,
+  cooldowns, gear, and recruit upgrades before the next level starts.
 
 ### 6.13 UI ✅ (gray-box, pre-art)
-- HUD: selected warlord name, renown, HP, army size; three ability slots
-  (READY / countdown / ACTIVE / LOCKED); longship countdown.
+- HUD: selected warlord name, HP, army size; **hacksilver treasury**; three
+  ability slots (READY / countdown / ACTIVE / LOCKED).
 - Health bars (warlords, recruits, gate); selection marker triangle.
 - **Cooldown display:** the selected warlord's three abilities as **radial
   dials** (bottom-centre) that fill as they recover — arrow + name per slot.
@@ -369,12 +360,37 @@ at in-range targets without repositioning.
 - Command set: move (stick) · select (face) · abilities (d-pad) · **hold (tap
   shoulder)** · retreat (hold shoulder).
 
+### 6.13c Feedback Channels 🕓 (three text spaces, by attention)
+The more a message matters, the more it interrupts:
+
+| Channel | Attention | Pauses? | Carries | Where |
+|---|---|---|---|---|
+| **Dialogue bar** | high — *read it* | **no (walk-and-talk)** | narrative / story | left column |
+| **Toast** | medium — *notice it* | no | mechanical, explicit | top-centre |
+| **Bark** | low — *nice if caught* | no | flavour, combat mood | over the unit |
+
+- **Dialogue = walk-and-talk (non-pausing).** The player keeps control while
+  warlords chat — perfect for slow level openings (march-and-talk). *Only* pause
+  for a genuine **choice**; never full-screen (that kills the living moment),
+  never mid-combat. Left column (narrow = fast to read); it can dim the rest.
+- **Toasts** = un-caused, notable events (found buffs, **enemy** buffs for
+  counterplay, objectives, economy, threats). **Flavour headline + explicit
+  effect** ("Bjorn's band tastes blood / ⚔ +20% damage · 15s"). **Show the
+  gain (+20%), never the multiplier (×1.2).** Colour: green buff / red nerf /
+  gold objective. **Warband-level, rounded, meaningful** — never per-recruit,
+  never imperceptible. Your *own* ability presses stay on the HUD, not toasts.
+- **Barks** = recruit flavour + combat-swing lines ("They break!"), on a
+  cooldown so they don't spam; **no mechanical claims** (that's the toast's job).
+- **Screen map:** dialogue left · warlord readout top-left · toasts top-centre ·
+  cooldown radials bottom-centre · warlord roster + health rings bottom-right ·
+  barks over units. Corners used; centre stays clear.
+
 ### 6.14b Retreat 🕓 (targeted for v0.25 — emergent model)
 **No button — retreat is just leaving.** Walking the warlord away *is* the
 retreat; the cost and tension come from three rules, almost no new code.
 - **Rearguard = whoever's left behind.** You retreat *from a losing fight*,
   where the enemy is doubling up and the whole retinue is engaged — so fleeing
-  **abandons your men** (that's why renown drops). A manageable fight leaves a
+  **abandons your men** (the price of fleeing). A manageable fight leaves a
   few free recruits trailing as escort. The split is emergent, not chosen.
 - **Leaderless → 0 damage.** A retinue recruit whose warlord is beyond a
   **leash range** (~half a screen) deals **zero** damage — it dies at its
@@ -391,15 +407,15 @@ retreat; the cost and tension come from three rules, almost no new code.
   pursuers while a Seax warband skirmishes away. **Charge** (its move-speed
   half) is the escape hatch — but a Charge you *spent winning* isn't there to
   flee with (commit-and-cost, §6.4).
-- **Renown −1** when the retreat *completes* — the warlord breaks contact and
-  gets clear past a distance threshold (small repositioning doesn't count). Can
-  drop a level → locks an ability slot (existing gate).
-- **Economy fit:** trades the *recoverable* clock (army) for the *expensive*
-  one (renown + build), §8. **Self-limiting:** you lose the abandoned men +
-  renown and rejoin against a now-reinforced, alerted enemy — never free.
+- **Cost:** the **abandoned men + the tactical setback** (you rejoin a
+  reinforced, alerted enemy). With renown gone, there's no separate score
+  penalty — the dead rearguard *is* the price.
+- **Economy fit:** you spend the *recoverable* clock (army) to survive the
+  level, §8. **Self-limiting:** you lose the abandoned men and rejoin a
+  now-reinforced, alerted enemy — never free.
 - **v0.1** already has the "soft retreat" (walk off, the patrol AI drops
   aggro); this is the v0.25 formalisation. New code is tiny: the leaderless
-  damage-gate, the warlord-speed derivation (§6.1), and the renown trigger.
+  damage-gate and the warlord-speed derivation (§6.1).
 
 ### 6.14 Exploration & Discoverables 🕓
 Interactable things placed in the world to make traversal rewarding (and to
@@ -410,18 +426,18 @@ temporary** — the perm/temp choice is the main balancing lever (see note).
 *psychological* cause, never a supernatural one. The gods do not alter steel
 or flesh.
 - **Material channel** — weapons → damage, armour/shields → defence, food &
-  provisions → speed, rest/healer/herbs → healing, silver → longship
+  provisions → speed, rest/healer/herbs → healing, plunder → hacksilver
   arrivals, roads/fords/boats/rear-entrances → routes. **Survivability (HP,
   armour, healing) comes ONLY from this channel** — gear and recovery.
 - **Morale channel** — omens, a raven, a skald's song, a heartening
   sacrifice, a recovered banner → a **temporary buff to attack + defence**
-  (heartened men fight harder and hold the line), plus renown. **No separate
+  (heartened men fight harder and hold the line), plus reputation (§6.15). **No separate
   "morale" variable** — "morale" is just the flavour label for a buff that
   applies the existing damage/defence multipliers. This is where Norse
   belief lives without magic: it moved men's courage (real), it did not
   thicken their mail.
 Rule: **belief improves how hard men fight (attack/defence) and their
-renown; it never raises max HP or heals — health comes only from the
+reputation; it never raises max HP or heals — health comes only from the
 material channel (gear, food, rest).** Re-skinning a source is free — the
 mechanics are identical whether the fiction is "a sacrifice before battle"
 or "a cache of Frankish mail."
@@ -441,7 +457,7 @@ usually wants to be tuned:
 
 | Reward | Serves | Tends to be | Material/morale source |
 |---|---|---|---|
-| Renown | Renown clock | Permanent, small/rare | Skald, famous plunder, runestone (reputation) |
+| Hacksilver | Silver economy | One-off, sized to the find | Plunder hoard, tribute, a buried cache |
 | Damage boost | Combat | Temporary (or capped perm) | Forged/captured weapons, a smithy |
 | Defence boost | Combat | Temporary (or capped perm) | Mail, shields, armour cache |
 | Army speed boost | Traversal/combat | Temporary | Food stores, provisions, pack animals |
@@ -451,7 +467,7 @@ usually wants to be tuned:
 | Sabotage | Strategic denial | One-time | Disable a beacon, burn a granary (cut enemy production), open a gate from inside |
 | Useful information | Scouting | Permanent or timed reveal | Local guide, watchtower, captured scout |
 | Speed a new warlord | Death economy | One-time | Silver hoard (plunder pays the crew) |
-| Renown for a new warlord | Death economy | One-time | Recovered banner — the named legacy heartens the men |
+| Silver for a fresh warlord | Catch-up | One-time | A recovered hoard — arms a raw replacement fast |
 | Morale (= attack + defence) | Combat | Temporary | Omen, raven, skald's song, a heartening sacrifice |
 | Village production boost | Economy | Temporary or capped perm | Captured tools/livestock/seed, a mill |
 | Lore & flavour | Worldbuilding | n/a | Runestones, ruins, captured monks, skalds |
@@ -464,7 +480,7 @@ usually wants to be tuned:
   **permanent** — it's map mastery, not raw power.
 - **Recovery** (healing, recruits) → safe — self-limiting (spent, or die
   normally).
-- **Death-economy finds** (speed/renown a newbie) → **one-time**, and they
+- **Catch-up finds** (speed/silver a newbie) → **one-time**, and they
   tie straight into the two-clocks recovery (§8): they soften a death
   without cheapening it.
 
@@ -495,7 +511,7 @@ lopsided ratio toward flavour is deliberate.
   Tech: `Area2D` (enter) + `VisibleOnScreenNotifier2D` `screen_exited`
   (consume) + a consumed flag.
 - **Choices can cost, not just reward:** a fight (risk), spending a recruit,
-  time — as well as renown/buffs/nothing.
+  time — as well as hacksilver/buffs/nothing.
 - **This IS the dialogue system.** An encounter (opening line → choices →
   per-choice outcome text + optional effect) is the same tech as Warcraft
   3-style warlord conversations (§11). Build once, serve both. The
@@ -533,9 +549,21 @@ groups into one long fight raises army resolve (= morale, attack+defence).
 Pairs with the 3-min encounter window that enables the chaining.
 
 **Connections:** the hoard/relic ideas also seed the future **gold/loot
-economy**. Route rewards across the three clocks (army / renown / traversal)
+economy**. Route rewards across the clocks (army / hacksilver / traversal)
 so exploration serves different needs, and **guard the best rewards** so a
 find is a decision, not a checkbox.
+
+---
+
+### 6.15 Interaction Tracking & Dialogue Trees 🕓
+The game **remembers what the player did** — settlements razed vs spared, NPCs
+bribed vs killed, whether they retreated, which warlord fell — and **dialogue
+reflects it.** A lightweight flag/counter store (per-run and per-campaign) feeds
+branching **dialogue trees** in the walk-and-talk bar (§6.13c), so warlords
+reference recent deeds ("After Hafic burned, the villages bar their doors") and
+NPCs react to reputation. Cheap to start (a dictionary of bools/counts +
+condition-gated lines); it makes the world feel consequential and turns the
+**hacksilver NPC interactions** (§6.5) into a memory, not one-offs.
 
 ---
 
@@ -546,8 +574,10 @@ find is a decision, not a checkbox.
   simply *team ≠ player team*. ✅
 - **Win condition:** no living warlord whose team differs from the player's.
   Populate a level with any number of enemy warlords. ✅
-- **No defeat state by design** (endless longships). A defeat check would be
-  added only for no-replacement hard levels. 🔶
+- **Defeat = total wipe → restart the level** from its start state (§6.11, §9);
+  the level is the retry unit. Single warlord deaths are permanent *for the
+  level*, and survivors gain an escalating **revenge boon** (§6.11).
+- **Target level length ≈ 20 min.** One clean pass through the loop.
 - ✅ **LevelManager** hooks each enemy warlord's death: toasts progress
   ("2 of 3 defeated") and shows a **victory/defeat panel** with stats (time,
   warlords lost, army remaining) on the last kill / total loss; replay on (A).
@@ -562,64 +592,86 @@ find is a decision, not a checkbox.
   committing (weapon silhouettes + counters) and can always pull out (soft
   retreat via the AI's aggro-drop; formal retreat §6.14b), restock at a village,
   find narrative buffs (§6.14), or bring another warlord / the right counter and
-  re-engage. **Persistence + tactics beats parity — grind does not** (death
-  costs time + renown).
+  re-engage. **Persistence + tactics beats parity — grind does not** (a warlord
+  death is permanent for the level; a wipe costs a restart, never the campaign).
+
+**Nerf philosophy.** Loss aversion is real — a −15% *feels* worse than +20%
+feels good. So: **no opaque persistent stat-debuffs on the player.** Make fights
+harder by (a) **buffing the enemy**, (b) **contextual weakness** (armour,
+leaderless→0 dmg, flanked), and (c) **scenario rules** (below). The *only*
+imposed player debuff is a **rare, clearly-caused, recoverable "shaken"** state
+(the dark twin of morale buffs — men spooked by a bad omen / a fallen jarl,
+until rallied).
+
+**Scenario modifiers (level rules).** The best "nerfs": narratively-explained
+**rules that change the puzzle**, not the numbers — and they reuse existing
+systems via flags. E.g. *cold winter* (village production off — survive on your
+band), *lost at sea* (start with no retinue — take the first village bare), *the
+food is held* (villages locked until you clear the bandit camp). Four rules:
+**state it up front** (dialogue + toast), **one twist per level**, **hook a
+system the player leans on** (economy/reinforcement/mobility), **give a readable
+out or honest endurance.** This is §7's difficulty lever with names on it.
+
+**Shuffled elements (per run).** Some world state **re-rolls each attempt** so
+retries aren't rote: which city gate is fortified vs weak (run 1 east strong /
+west weak → run 2 swapped), where an ambush sits (left approach vs centre), a
+garrison's size or type. Keeps the 20-min level fresh across restarts and adds
+roguelike texture. Implement as seeded flags read at level start.
 
 **v0.1 slice scope:** 4 player warlords; loadout → fight → win by killing all
-enemy warlords. *In:* movement, retinues, combat + armour, abilities (buffs +
-stun/knockback), villages/burhs/city-as-fortress, enemy **patrol AI** (waypoint
-steering, no navmesh), loadout screen, win/lose + toasts. *Deferred (documented,
-out of slice):* renown/veterancy, churches, longship respawn, formal retreat,
-hold stance, fog/morale, city-capture economy, real art. Enemy warlords in v0.1
-**don't use abilities** (leave their L/R empty).
+enemy warlords, in ~20 min. *In:* movement, retinues, combat + armour, abilities
+(buffs + stun/knockback), villages/burhs/city-as-fortress, enemy **patrol AI**
+(waypoint steering, no navmesh), loadout screen, win/lose + toasts. *Deferred
+(documented, out of slice):* hacksilver progression, silver upgrade trees,
+churches, revenge boon, restart-decay economy, formal retreat, hold stance,
+fog/morale, city-capture economy, shuffled elements, real art. Enemy warlords in
+v0.1 **don't use abilities** (leave their L/R empty).
 
 ---
 
-## 8. Death Economy — Two Clocks
+## 8. Death Economy — Within a Level
 
-When a warlord dies, the player loses two things that recover at different
-speeds:
+The level is the unit of risk; losses recover at different speeds:
 
-- **Army (recruits):** recovers **fast** — a newbie musters a big warband
-  quickly from late-game stocked villages (via mustering + Call).
-- **Renown (personal power + ability build):** recovers **slow** — the
-  lasting cost of death.
+- **Army (recruits):** recovers **fast, in-level** — muster a fresh warband from
+  captured villages.
+- **A warlord:** **permanent for the level** (§6.11) — fight on shorthanded, but
+  survivors gain the escalating **revenge boon**, so a loss is a *comeback hook*,
+  not a death spiral.
+- **Total wipe:** **restart the level** (§9) — never the campaign.
+- **Between levels:** empty roster slots refill with fresh recruits and
+  **hacksilver** (§6.5) rebuilds power (cheap early, so a rebuilt roster catches
+  up).
 
-🔶 **Deed-magnitude renown** (recommended, not built): renown reward scales
-with the *objective's* size (village +1, burh +2, gate/warlord +3), so
-late-game newbies catch up naturally without cheapening death.
-
-Note: because a warlord is untargetable until its retinue is dead, the
-retinue is almost always gone before the warlord falls — so "inherit the
-orphaned retinue" is a non-mechanic. Rare lingering retinues **fade out on
-camera change**. 🔶
+Note: because a warlord is untargetable until its retinue is dead, the retinue
+is almost always gone before the warlord falls — "inherit the orphaned retinue"
+is a non-mechanic. Rare lingering retinues **fade on camera change**. 🔶
 
 ---
 
-## 9. Campaign Recovery — The Checkpoint Contract 🔶
+## 9. Campaign Recovery — The Level Is the Checkpoint 🕓
 
-Solves the "10 hours in, total wipe, player quits" risk. **Single death**
-and **total wipe** are different problems with different solutions:
+The level is the unit of retry, which makes recovery simple:
+- **Total wipe → restart the level** from its start state. No campaign loss —
+  re-attempt the same ~20-min level.
+- **Restart-decay (anti-scum):** the **hacksilver reward for clearing a level
+  starts with a bonus that shrinks with each restart**, flattening to a floor
+  after ~3–4 tries. This stops the player **restarting the instant a warlord
+  dies** to preserve the roster — pushing on with the revenge boon (§6.11)
+  usually out-earns a fresh restart.
+- **Progression banks between levels** — a cleared level is done; roster,
+  cooldowns, gear, and silver carry forward. Requires a **save between levels**
+  (no mid-level save).
 
-- **Single death** → the two-clocks recovery above.
-- **Total wipe** → **reload the last church checkpoint**, roster restored to
-  its state at that church.
-
-**The contract:** *deaths bank permanently when you reach the next church; a
-wipe reloads the last church.* Permadeath is real (banked at churches);
-a wipe costs the time since your last save, never the campaign. This makes
-churches strategic ("push or bank?") and makes the punishing "three renown-0
-warlords vs a late level" state rare and self-inflicted.
-
-Requires the **save system** (serialize warlords, retinues, renown, villages,
-cooldowns) — the priority of the campaign phase.
+This *replaces* the church-checkpoint contract: no in-level saves, no "push or
+bank?" — just clean, replayable ~20-min levels with a decaying retry reward.
 
 ---
 
 ## 10. Technical Architecture ✅
 
 - **Base class `Combatant`** (`CharacterBody2D`): team, health, `take_damage`,
-  `died` signal, stun, structure flag, renown kill-credit. Extended by
+  `died` signal, stun, structure flag, silver kill-credit. Extended by
   `Warlord` and `Recruit`.
 - **Controller split:** `Warlord` finds a `*Controller` child by wildcard and
   asks it for a move direction each frame — same warlord scene serves player
@@ -654,10 +706,10 @@ cooldowns) — the priority of the campaign phase.
 3. 🕓 **Movement feel** — acceleration curves, retinue flow (pairs with art).
 4. 🕓 **Dialogue system** — Warcraft 3-style, pre/post-level and on-meeting;
    leans on existing warlord names.
-5. 🔶 **Ability upgrade trees** (Option B component system) + renown-funded,
+5. 🔶 **Ability upgrade trees** (Option B component system) + silver-funded,
    church-chosen upgrades.
 6. 🔶 **Save / checkpoint system** — the campaign-recovery contract (§9).
-7. 🕓 **Campaign layer** — stitch levels, persist warlords/renown between them.
+7. 🕓 **Campaign layer** — stitch levels, persist warlords/hacksilver between them.
 8. 🕓 Enemy warlord ability AI; results/continue screen; onboarding for the
    invisible rules.
 9. 🕓 **Send-warlord-home command** (needs navigation + village muster): order
@@ -674,7 +726,7 @@ cooldowns) — the priority of the campaign phase.
 | Risk (seen in) | Status |
 |---|---|
 | Follower pathing jank (Pikmin, Bad North) | ✅ Addressed — navmesh pathfinding |
-| Permadeath full-restart boredom (Bad North) | 🔶 Addressed — longship + checkpoint contract |
+| Permadeath full-restart boredom (Bad North) | 🔶 Addressed — permadeath-per-level + revenge boon + restart-decay (§6.11/§9) |
 | Rebuild grind after setback (Kingdom Two Crowns) | Mitigated by Call + village caps; watch in playtest |
 | Traversal time (Kingdom Two Crowns) | Design goal is *engaging* slow travel; movement-feel pass 🕓 |
 | Rule opacity (Thronefall, Kingdom) | 🕓 Progressive complexity (below) + radius indicators |
@@ -700,7 +752,7 @@ one-warlord level *is* the single-warlord tutorial. Example ladder:
 3. Villages + mustering (grow the army).
 4. A burh (choke points).
 5. A second warlord + switching.
-6. Renown, churches, unit-type choice, permadeath stakes…
+6. Hacksilver, churches, unit-type choice, permadeath stakes…
 
 Only small "lock"/prompt polish is code; the teaching ladder itself is level
 design. Keep every system **toggleable-by-omission** (they already are).
@@ -814,6 +866,17 @@ very high counts (more draw calls). **Escape hatch** (only if it ever bites):
 **bake the recolour to a texture once at spawn**, then use a plain sprite —
 no per-frame shader, fully batchable. Don't build this pre-emptively.
 
+### 14.8 Code-drawn terrain 🕓 (exploring)
+Ambition: **draw map features from code/shaders** instead of sprite tiles — a
+script that takes a line/curve and renders a **river** (a widened, shaded
+polyline with flow), plus roads, coastlines, field borders. Pros: tiny asset
+footprint, procedurally varied maps, pairs naturally with **shuffled elements**
+(§7). Godot fit: `Line2D` / `Polygon2D` + a `canvas_item` shader for water/edges,
+over a `TileMapLayer` base. Treat as R&D — prototype **one** feature (a river)
+before committing the map pipeline to it.
+
+---
+
 ## 15. Combat Balance & Tuning 🕓 (starting values — tune in playtest)
 
 Derived from a Monte-Carlo combat simulator that mirrors the pairing / ranged
@@ -873,3 +936,46 @@ Axe retinue (6).
 - **Bows & Seax test too weak** (no kiting/screening) — their caps (9 / 12)
   pre-compensate; expect them to shine once positioning is real.
 - **Spear sits on a knife-edge at cap 5** — first thing to watch/tune.
+
+---
+
+## 16. Vertical Slice — The Build Target 🕓
+
+Per Indie Game Clinic: **not a tutorial — a slice of the *mid-game*** that shows
+the core at its best. **One level, ~20-min critical path, ruthlessly polished.**
+Guard against scope creep like it's the enemy.
+
+**Polish *feel* over breadth.** The moment-to-moment of selecting a warlord,
+moving a retinue, and the mill/pairing combat is what a tester judges first —
+nail responsiveness before adding content. Cut content, never core-verb polish.
+
+**The six beats to engineer** (design the level so a cold tester can't miss
+them):
+1. **Command feel** — move, retinue trails, a first easy skirmish.
+2. **Economy** — capture a village → muster → the warband visibly *grows*.
+3. **Counter puzzle** — hit something you can't beat head-on (Seax bounce off a
+   shield wall) → bring the right unit, flank with a 2nd warlord, or use an
+   ability. *Needs 2–3 unit types in play, or the RPS never surfaces.*
+4. **Assault set-piece** — the city: battlements raining arrows, screen with
+   Shield Wall, breach the gate, push to the jarl.
+5. **Clutch cooldown** — a close fight an ability turns (Rally / Shield Bash).
+6. **The win** — kill the last jarl → VICTORY + stats.
+
+**Onboarding = just-in-time toasts, never front-loaded.** Introduce each control
+*at the moment it's relevant* ("walk in to muster," "they're too armoured —
+press ▲"), one-shot. Teaches through play; keeps the mid-game feel.
+
+**In:** 2–4 warlords + loadout · mill/flock command · **2–3 unit types**
+(counters bite) · built-in signatures + one universal cooldown · village
+capture/muster · one assault set-piece (city + jarl) · enemy patrol AI ·
+win/defeat + victory panel · three-channel feedback · **basic sprites** (floaty
+ok — mustn't *look* like a prototype).
+
+**Out (keep it clean/baseline):** hacksilver/upgrades, revenge boon &
+restart-decay (it's a single-level slice), scenario modifiers, shuffled
+elements, the full discoverables system (one narrative buff for flavour),
+churches, formal retreat, fog/morale, multi-level. Show the *default* game at
+its best.
+
+**The test for every feature:** *"Does this make a tester feel the core fantasy
+in the next 10 minutes?"* If not — later.
