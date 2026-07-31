@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"dane_bondi"
+display_name = "Bóndi Raiders"
+faction = 2
+role = 0
+model_count = 8
+health_per_model = 100.0
+armour = 0.20
+armour_pierce_vulnerability = 1.0
+move_speed = 31.0
+is_armoured = false
+is_wheeled = false
+melee_damage = 19.0
+melee_reach_px = 18.0
+melee_interval = 1.2
+missile_range_px = 110.0
+missile_damage = 16.0
+missile_interval = 5.0
+missile_accuracy = 0.35
+morale = 80.0
+suppression_rate = 6.5
+morale_recovery = 5.0
+rout_threshold = 0.25
+immune_to_suppression = false
+sight_radius_px = 540.0
+abilities = Array[StringName]([&"throwing_spear", &"shieldwall"])
+reinforce_cost = 1

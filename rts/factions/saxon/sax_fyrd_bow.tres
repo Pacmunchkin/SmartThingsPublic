@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"sax_fyrd_bow"
+display_name = "Hunters of the Levels"
+faction = 1
+role = 2
+model_count = 5
+health_per_model = 80.0
+armour = 0.05
+armour_pierce_vulnerability = 1.0
+move_speed = 34.0
+is_armoured = false
+is_wheeled = false
+melee_damage = 8.0
+melee_reach_px = 14.0
+melee_interval = 1.6
+missile_range_px = 400.0
+missile_damage = 14.0
+missile_interval = 3.2
+missile_accuracy = 0.5
+morale = 60.0
+suppression_rate = 11.0
+morale_recovery = 4.5
+rout_threshold = 0.35
+immune_to_suppression = false
+sight_radius_px = 640.0
+abilities = Array[StringName]([&"aimed_volley", &"marsh_footed"])
+reinforce_cost = 1
