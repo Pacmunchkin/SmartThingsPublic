@@ -1,0 +1,563 @@
+[gd_resource type="Resource" script_class="MissionDefinition" load_steps=60 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_definition.gd" id="1_mission"]
+[ext_resource type="Script" path="res://scripts/resources/mission_act.gd" id="2_act"]
+[ext_resource type="Script" path="res://scripts/resources/objective_definition.gd" id="3_obj"]
+[ext_resource type="Script" path="res://scripts/resources/wave_definition.gd" id="4_wave"]
+[ext_resource type="Script" path="res://scripts/resources/scripted_event.gd" id="5_event"]
+[ext_resource type="Resource" path="res://factions/saxon/sax_thegn_wulfstan.tres" id="6_thegn"]
+[ext_resource type="Resource" path="res://factions/saxon/sax_hearthweru.tres" id="7_hearth"]
+[ext_resource type="Resource" path="res://factions/saxon/sax_fyrd_spear.tres" id="8_spear"]
+[ext_resource type="Resource" path="res://factions/saxon/sax_fyrd_bow.tres" id="9_bow"]
+[ext_resource type="Resource" path="res://factions/saxon/obj_ox_cart.tres" id="10_cart"]
+[ext_resource type="Resource" path="res://factions/dane/dane_bondi.tres" id="11_bondi"]
+[ext_resource type="Resource" path="res://factions/dane/dane_huscarl.tres" id="12_huscarl"]
+[ext_resource type="Resource" path="res://factions/dane/dane_bow.tres" id="13_dbow"]
+[ext_resource type="Resource" path="res://factions/dane/dane_berserkr.tres" id="14_berserkr"]
+[ext_resource type="Resource" path="res://factions/dane/jarl_sigurd.tres" id="15_jarl"]
+
+[sub_resource type="Resource" id="Resource_a1o1"]
+script = ExtResource("3_obj")
+objective_id = &"obj_escort_cart"
+title = "Get the cart across the causeway"
+description = "The minster's relics and the children of Ēastburh are on one ox-cart. It moves at a walk, it cannot leave the road, and it will not survive being caught in the open."
+kind = 3
+priority = 0
+target_unit = &"obj_ox_cart"
+target_marker = &"P_EvacGoal"
+required_count = 1
+duration_seconds = 0.0
+grace_seconds = 0.0
+starts_hidden = false
+completion_wave_scalar = 1.0
+
+[sub_resource type="Resource" id="Resource_a1o2"]
+script = ExtResource("3_obj")
+objective_id = &"obj_hold_causeway"
+title = "Hold the causeway head"
+description = "One raised track crosses the marsh. Lose its eastern end and nothing else in this mission matters."
+kind = 0
+priority = 0
+target_sector = &"sector_causeway"
+duration_seconds = 0.0
+grace_seconds = 30.0
+completion_wave_scalar = 1.0
+
+[sub_resource type="Resource" id="Resource_a1o3"]
+script = ExtResource("3_obj")
+objective_id = &"obj_deny_ford"
+title = "Deny the ford"
+description = "The Danes can wade the river at the old ford. Hold it and their landing party must come the long way round the wood."
+kind = 0
+priority = 1
+target_sector = &"sector_ford"
+duration_seconds = 100.0
+grace_seconds = 25.0
+completion_wave_scalar = 0.85
+sets_campaign_flag = &"ford_denied"
+
+[sub_resource type="Resource" id="Resource_a1w1"]
+script = ExtResource("4_wave")
+wave_id = &"w1_ford_probe"
+trigger = 0
+delay_seconds = 45.0
+spawn_markers = Array[StringName]([&"D_FordProbe"])
+squad_ids = Array[StringName]([&"dane_bondi"])
+squad_counts = Array[int]([2])
+difficulty_scalar = 1.0
+order_sector = &"sector_ford"
+stance = 3
+stagger_seconds = 4.0
+repeat_interval = 0.0
+max_repeats = 0
+telegraph_seconds = 0.0
+
+[sub_resource type="Resource" id="Resource_a1w2"]
+script = ExtResource("4_wave")
+wave_id = &"w1_wood_scouts"
+trigger = 0
+delay_seconds = 110.0
+spawn_markers = Array[StringName]([&"D_Wood_N"])
+squad_ids = Array[StringName]([&"dane_bow", &"dane_bondi"])
+squad_counts = Array[int]([1, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_village"
+stance = 2
+stagger_seconds = 6.0
+telegraph_seconds = 12.0
+telegraph_text = "Smoke on the wood-edge. They have seen the cart."
+
+[sub_resource type="Resource" id="Resource_a1w3"]
+script = ExtResource("4_wave")
+wave_id = &"w1_press"
+trigger = 0
+delay_seconds = 190.0
+spawn_markers = Array[StringName]([&"D_Wood_N", &"D_FordProbe"])
+squad_ids = Array[StringName]([&"dane_bondi"])
+squad_counts = Array[int]([2])
+difficulty_scalar = 1.0
+order_sector = &"sector_minster"
+stance = 3
+stagger_seconds = 5.0
+repeat_interval = 70.0
+max_repeats = 3
+telegraph_seconds = 0.0
+
+[sub_resource type="Resource" id="Resource_a1e1"]
+script = ExtResource("5_event")
+event_id = &"ev_a1_open"
+when = 0
+delay_seconds = 0.0
+one_shot = true
+action = 0
+speaker = "Wulfstan"
+text = "Twelfth Night is a month gone and Wessex has no king in the field. Load the cart. We hold the causeway head until it is across, and not one breath longer."
+
+[sub_resource type="Resource" id="Resource_a1e2"]
+script = ExtResource("5_event")
+event_id = &"ev_a1_cart_moves"
+when = 1
+trigger_id = &"trg_cart_loaded"
+one_shot = true
+action = 0
+speaker = "Brother Eadric"
+text = "It is loaded, lord. Saint Etheldreda's arm and eleven children. Do not let the oxen stop on the marsh - they will not start again."
+
+[sub_resource type="Resource" id="Resource_a1e3"]
+script = ExtResource("5_event")
+event_id = &"ev_a1_ford_warn"
+when = 1
+trigger_id = &"trg_ford_breached"
+one_shot = true
+action = 0
+speaker = "Hunter of the Levels"
+text = "They are in the water at the old ford. Waist deep and no shields up - if we are ever to loose on them, it is now."
+
+[sub_resource type="Resource" id="Resource_a1e4"]
+script = ExtResource("5_event")
+event_id = &"ev_a1_crossed"
+when = 1
+trigger_id = &"trg_cart_crossed"
+one_shot = true
+action = 6
+
+[sub_resource type="Resource" id="Resource_a2o1"]
+script = ExtResource("3_obj")
+objective_id = &"obj_hold_minster"
+title = "Hold the minster yard"
+description = "The rise is the only ground on this map that sees the whole valley. Whoever owns it owns the fight."
+kind = 0
+priority = 0
+target_sector = &"sector_minster"
+duration_seconds = 420.0
+grace_seconds = 45.0
+completion_wave_scalar = 1.0
+
+[sub_resource type="Resource" id="Resource_a2o2"]
+script = ExtResource("3_obj")
+objective_id = &"obj_survive_assault"
+title = "Survive until the fyrd of Somerset comes up"
+description = "Riders went south at dawn. Seven minutes, if they were believed."
+kind = 2
+priority = 0
+duration_seconds = 420.0
+completion_wave_scalar = 1.0
+
+[sub_resource type="Resource" id="Resource_a2o3"]
+script = ExtResource("3_obj")
+objective_id = &"obj_hold_drove"
+title = "Keep the drove road open"
+description = "Every levy that reaches you walks up this lane. Lose it and the trickle stops."
+kind = 0
+priority = 1
+target_sector = &"sector_drove"
+duration_seconds = 300.0
+grace_seconds = 60.0
+completion_wave_scalar = 0.9
+
+[sub_resource type="Resource" id="Resource_a2o4"]
+script = ExtResource("3_obj")
+objective_id = &"obj_save_thatch"
+title = "Leave the village something to come back to"
+description = "Keep four of the seven houses standing. They are cover, and they are also somebody's winter."
+kind = 7
+priority = 2
+target_group = &"village_thatch"
+required_count = 4
+completion_wave_scalar = 1.0
+sets_campaign_flag = &"eastburh_spared"
+
+[sub_resource type="Resource" id="Resource_a2w1"]
+script = ExtResource("4_wave")
+wave_id = &"w2_landing_1"
+trigger = 0
+delay_seconds = 20.0
+spawn_markers = Array[StringName]([&"D_Staithe_A", &"D_Staithe_B"])
+squad_ids = Array[StringName]([&"dane_bondi", &"dane_bow"])
+squad_counts = Array[int]([2, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_ford"
+stance = 3
+stagger_seconds = 3.0
+telegraph_seconds = 10.0
+telegraph_text = "Three ships beaching at the staithe."
+
+[sub_resource type="Resource" id="Resource_a2w2"]
+script = ExtResource("4_wave")
+wave_id = &"w2_landing_2"
+trigger = 0
+delay_seconds = 80.0
+spawn_markers = Array[StringName]([&"D_Staithe_B", &"D_Staithe_C"])
+squad_ids = Array[StringName]([&"dane_bondi", &"dane_huscarl"])
+squad_counts = Array[int]([2, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_minster"
+stance = 3
+stagger_seconds = 3.0
+
+[sub_resource type="Resource" id="Resource_a2w3"]
+script = ExtResource("4_wave")
+wave_id = &"w2_wood_flank"
+trigger = 0
+delay_seconds = 155.0
+spawn_markers = Array[StringName]([&"D_Wood_E", &"D_Wood_N"])
+squad_ids = Array[StringName]([&"dane_bow", &"dane_bondi"])
+squad_counts = Array[int]([2, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_village"
+stance = 2
+stagger_seconds = 4.0
+telegraph_seconds = 20.0
+telegraph_text = "Movement in Hēahwudu. Bowmen, working round the north of the village."
+
+[sub_resource type="Resource" id="Resource_a2w4"]
+script = ExtResource("4_wave")
+wave_id = &"w2_berserkir"
+trigger = 0
+delay_seconds = 230.0
+spawn_markers = Array[StringName]([&"D_Staithe_A"])
+squad_ids = Array[StringName]([&"dane_berserkr", &"dane_huscarl"])
+squad_counts = Array[int]([1, 2])
+difficulty_scalar = 1.0
+order_sector = &"sector_minster"
+stance = 3
+stagger_seconds = 2.0
+telegraph_seconds = 15.0
+telegraph_text = "Bare-armed men at the front of their line. They are not stopping for the ditch."
+
+[sub_resource type="Resource" id="Resource_a2w5"]
+script = ExtResource("4_wave")
+wave_id = &"w2_downland"
+trigger = 0
+delay_seconds = 305.0
+spawn_markers = Array[StringName]([&"D_Downland"])
+squad_ids = Array[StringName]([&"dane_bondi", &"dane_bow"])
+squad_counts = Array[int]([3, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_drove"
+stance = 3
+stagger_seconds = 4.0
+telegraph_seconds = 25.0
+telegraph_text = "A second band on the downland, east. They mean to cut the drove road behind us."
+
+[sub_resource type="Resource" id="Resource_a2w6"]
+script = ExtResource("4_wave")
+wave_id = &"w2_jarl_press"
+trigger = 0
+delay_seconds = 365.0
+spawn_markers = Array[StringName]([&"D_Jarl", &"D_Staithe_B"])
+squad_ids = Array[StringName]([&"jarl_sigurd", &"dane_huscarl", &"dane_berserkr"])
+squad_counts = Array[int]([1, 2, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_minster"
+stance = 3
+stagger_seconds = 2.0
+telegraph_seconds = 20.0
+telegraph_text = "A raven banner coming up from the ships. That is Sigurð himself."
+
+[sub_resource type="Resource" id="Resource_a2w7"]
+script = ExtResource("4_wave")
+wave_id = &"w2_ford_reprisal"
+trigger = 2
+delay_seconds = 25.0
+target_sector = &"sector_ford"
+spawn_markers = Array[StringName]([&"D_FordProbe"])
+squad_ids = Array[StringName]([&"dane_bondi"])
+squad_counts = Array[int]([2])
+difficulty_scalar = 1.0
+order_sector = &"sector_village"
+stance = 2
+stagger_seconds = 5.0
+
+[sub_resource type="Resource" id="Resource_a2e1"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_open"
+when = 0
+delay_seconds = 0.0
+action = 0
+speaker = "Wulfstan"
+text = "The cart is over. Now we are the only thing between the heathen host and a bridge of our own making. Shieldwall on the churchyard. Bowmen on the rise."
+
+[sub_resource type="Resource" id="Resource_a2e2"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_fire_arrows"
+when = 0
+delay_seconds = 185.0
+action = 2
+cover_group = &"village_thatch"
+count = 3
+duration_seconds = 22.0
+chained_event_ids = Array[StringName]([&"ev_a2_fire_line"])
+
+[sub_resource type="Resource" id="Resource_a2e3"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_fire_line"
+when = 7
+action = 0
+speaker = "Brother Eadric"
+text = "They are shooting fire into the thatch. Every roof that burns is one less wall to stand behind."
+
+[sub_resource type="Resource" id="Resource_a2e4"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_mist"
+when = 0
+delay_seconds = 275.0
+action = 3
+weather_id = &"marsh_mist"
+duration_seconds = 95.0
+chained_event_ids = Array[StringName]([&"ev_a2_mist_line"])
+
+[sub_resource type="Resource" id="Resource_a2e5"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_mist_line"
+when = 7
+action = 0
+speaker = "Hunter of the Levels"
+text = "Mist off the levels, lord. We shoot at what we cannot see now - and they only ever wanted to be close."
+
+[sub_resource type="Resource" id="Resource_a2e6"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_ford_breached"
+when = 1
+trigger_id = &"trg_ford_breached"
+action = 0
+speaker = "Wulfstan"
+text = "The ford is theirs. They will be behind the minster inside a hundred heartbeats."
+
+[sub_resource type="Resource" id="Resource_a2e7"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_minster_threat"
+when = 1
+trigger_id = &"trg_minster_threatened"
+action = 0
+speaker = "Brother Eadric"
+text = "They are in the churchyard, lord. In the churchyard."
+
+[sub_resource type="Resource" id="Resource_a3o1"]
+script = ExtResource("3_obj")
+objective_id = &"obj_kill_jarl"
+title = "Kill Jarl Sigurð Ormsson"
+description = "He will not stand once his line breaks. He will run for the water."
+kind = 5
+priority = 0
+target_unit = &"jarl_sigurd"
+completion_wave_scalar = 1.0
+sets_campaign_flag = &"sigurd_slain"
+
+[sub_resource type="Resource" id="Resource_a3o2"]
+script = ExtResource("3_obj")
+objective_id = &"obj_take_staithe"
+title = "Take the staithe"
+description = "Stand on the beach and there is nowhere left for them to be."
+kind = 1
+priority = 1
+target_sector = &"sector_staithe"
+completion_wave_scalar = 1.0
+
+[sub_resource type="Resource" id="Resource_a3o3"]
+script = ExtResource("3_obj")
+objective_id = &"obj_burn_ships"
+title = "Burn the longships"
+description = "Three hulls drawn up on the shingle. Fire them and no man on this bank goes home to tell Guthrum what he found here."
+kind = 6
+priority = 2
+target_group = &"longships"
+required_count = 3
+starts_hidden = false
+completion_wave_scalar = 1.0
+sets_campaign_flag = &"ships_burned"
+
+[sub_resource type="Resource" id="Resource_a3w1"]
+script = ExtResource("4_wave")
+wave_id = &"w3_somerset_fyrd"
+trigger = 0
+delay_seconds = 3.0
+spawn_markers = Array[StringName]([&"P_Reinforce_Causeway"])
+squad_ids = Array[StringName]([&"sax_fyrd_spear", &"sax_hearthweru"])
+squad_counts = Array[int]([4, 1])
+difficulty_scalar = 1.0
+order_sector = &"sector_village"
+stance = 2
+stagger_seconds = 3.0
+telegraph_seconds = 0.0
+
+[sub_resource type="Resource" id="Resource_a3w2"]
+script = ExtResource("4_wave")
+wave_id = &"w3_rearguard"
+trigger = 0
+delay_seconds = 25.0
+spawn_markers = Array[StringName]([&"D_Staithe_C"])
+squad_ids = Array[StringName]([&"dane_huscarl"])
+squad_counts = Array[int]([2])
+difficulty_scalar = 1.0
+order_sector = &"sector_staithe"
+stance = 0
+stagger_seconds = 2.0
+
+[sub_resource type="Resource" id="Resource_a3w3"]
+script = ExtResource("4_wave")
+wave_id = &"w3_ship_guard"
+trigger = 1
+trigger_id = &"trg_jarl_at_staithe"
+delay_seconds = 4.0
+spawn_markers = Array[StringName]([&"D_Staithe_A", &"D_Staithe_C"])
+squad_ids = Array[StringName]([&"dane_bondi"])
+squad_counts = Array[int]([2])
+difficulty_scalar = 1.0
+order_sector = &"sector_staithe"
+stance = 1
+stagger_seconds = 1.5
+
+[sub_resource type="Resource" id="Resource_a3e1"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_open"
+when = 0
+delay_seconds = 0.0
+action = 0
+speaker = "Wulfstan"
+text = "Spears on the causeway - ours. Somerset has come up. Forward off the rise and drive them into their own ships."
+
+[sub_resource type="Resource" id="Resource_a3e2"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_jarl_line"
+when = 6
+target_unit = &"jarl_sigurd"
+health_fraction = 0.4
+action = 0
+speaker = "Jarl Sigurð"
+text = "Enough. To the ships - the tide does not wait on Christ-men."
+
+[sub_resource type="Resource" id="Resource_a3e3"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_jarl_breaks"
+when = 6
+target_unit = &"jarl_sigurd"
+health_fraction = 0.4
+action = 8
+new_stance = 4
+
+[sub_resource type="Resource" id="Resource_a3e4"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_jarl_escapes"
+when = 1
+trigger_id = &"trg_jarl_at_staithe"
+action = 9
+outcome = 1
+
+[sub_resource type="Resource" id="Resource_a3e5"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_ships_burn"
+when = 3
+objective_id = &"obj_burn_ships"
+action = 10
+trigger_id = &"trg_jarl_at_staithe"
+chained_event_ids = Array[StringName]([&"ev_a3_ships_burn_line"])
+
+[sub_resource type="Resource" id="Resource_a3e6"]
+script = ExtResource("5_event")
+event_id = &"ev_a3_ships_burn_line"
+when = 7
+action = 0
+speaker = "Wulfstan"
+text = "Their ships are burning. There is no water road out of the Levels now - only us, and the marsh."
+
+[sub_resource type="Resource" id="Resource_a2e8"]
+script = ExtResource("5_event")
+event_id = &"ev_a2_east_flank"
+when = 1
+trigger_id = &"trg_east_flank_sighted"
+action = 0
+speaker = "Hunter of the Levels"
+text = "There are more of them on the downland, lord, east of the burh ditch. They did not come off the ships."
+
+[sub_resource type="Resource" id="Resource_act1"]
+script = ExtResource("2_act")
+act_id = &"act_1_crossing"
+title = "I - The Loading of the Cart"
+briefing = "Ēastburh, in the Somerset Levels. A month after the heathen took Chippenham at Twelfth Night, and three days after the last of Wessex's ealdormen sent word that he would not come.\n\nGet the minster's cart onto the causeway. Everything after that is a fight you chose."
+outro = "The cart is on the far bank. Now the harder half."
+objectives = Array[Resource]([SubResource("Resource_a1o1"), SubResource("Resource_a1o2"), SubResource("Resource_a1o3")])
+waves = Array[Resource]([SubResource("Resource_a1w1"), SubResource("Resource_a1w2"), SubResource("Resource_a1w3")])
+scripted_events = Array[Resource]([SubResource("Resource_a1e1"), SubResource("Resource_a1e2"), SubResource("Resource_a1e3"), SubResource("Resource_a1e4")])
+deploy_spawn_markers = Array[StringName]([&"P_Thegn", &"P_Hearthweru", &"P_FyrdSpear_A", &"P_FyrdSpear_B", &"P_FyrdBow", &"P_EscortCart"])
+advance = 0
+advance_objective = &"obj_escort_cart"
+reinforcement_interval = 0.0
+
+[sub_resource type="Resource" id="Resource_act2"]
+script = ExtResource("2_act")
+act_id = &"act_2_shieldwall"
+title = "II - The Shieldwall at Ēastburh"
+briefing = "Seven minutes until Somerset comes up the drove road. Hold the rise."
+outro = "Horns on the causeway. Ours."
+objectives = Array[Resource]([SubResource("Resource_a2o1"), SubResource("Resource_a2o2"), SubResource("Resource_a2o3"), SubResource("Resource_a2o4")])
+waves = Array[Resource]([SubResource("Resource_a2w1"), SubResource("Resource_a2w2"), SubResource("Resource_a2w3"), SubResource("Resource_a2w4"), SubResource("Resource_a2w5"), SubResource("Resource_a2w6"), SubResource("Resource_a2w7")])
+scripted_events = Array[Resource]([SubResource("Resource_a2e1"), SubResource("Resource_a2e2"), SubResource("Resource_a2e3"), SubResource("Resource_a2e4"), SubResource("Resource_a2e5"), SubResource("Resource_a2e6"), SubResource("Resource_a2e7"), SubResource("Resource_a2e8")])
+deploy_spawn_markers = Array[StringName]([])
+advance = 2
+advance_sector = &"sector_minster"
+advance_seconds = 420.0
+reinforcement_interval = 90.0
+reinforcement_squad_id = &"sax_fyrd_spear"
+reinforcement_marker = &"P_Reinforce_Drove"
+reinforcement_sectors = Array[StringName]([&"sector_drove", &"sector_village"])
+reinforcement_cap = 6
+
+[sub_resource type="Resource" id="Resource_act3"]
+script = ExtResource("2_act")
+act_id = &"act_3_counterattack"
+title = "III - Cut Off the Ships"
+briefing = "They came off the water. Send them back into it."
+outro = "Ēastburh holds. Ride for Egbert's Stone."
+objectives = Array[Resource]([SubResource("Resource_a3o1"), SubResource("Resource_a3o2"), SubResource("Resource_a3o3")])
+waves = Array[Resource]([SubResource("Resource_a3w1"), SubResource("Resource_a3w2"), SubResource("Resource_a3w3")])
+scripted_events = Array[Resource]([SubResource("Resource_a3e1"), SubResource("Resource_a3e2"), SubResource("Resource_a3e3"), SubResource("Resource_a3e4"), SubResource("Resource_a3e5"), SubResource("Resource_a3e6")])
+deploy_spawn_markers = Array[StringName]([])
+advance = 0
+advance_objective = &"obj_kill_jarl"
+reinforcement_interval = 120.0
+reinforcement_squad_id = &"sax_fyrd_spear"
+reinforcement_marker = &"P_Reinforce_Drove"
+reinforcement_sectors = Array[StringName]([&"sector_drove"])
+reinforcement_cap = 3
+
+[resource]
+script = ExtResource("1_mission")
+mission_id = &"m04_athelney"
+title = "The Causeway at Æthelinga Īeg"
+subtitle = "Somerset Levels, February 878"
+briefing = "You are Wulfstan, thegn of Ēastburh, and you have forty-one men.\n\nGuthrum's host took Chippenham at Twelfth Night while the kingdom was drunk. Alfred is somewhere in the marsh with a household guard and no army. What he has instead is time - and time is bought at crossings like this one.\n\nA raiding band has come up the river to burn the minster and cut the causeway to the island. Hold it long enough for the fyrd of Somerset to reach you, then put the raiders back in the water."
+historical_note = "Athelney, Alfred's marsh refuge in the winter of 877-878, is attested; the Ēastburh of this mission is not. Jarl Sigurð Ormsson is invented. The Danish practice of overwintering, raiding upriver by ship and beaching for a land action is well recorded, as is the fyrd's slow, obligation-bound muster - which is why the reinforcement trickle in Act II is a trickle."
+level_scene = "res://missions/m04_athelney/m04_the_causeway_at_athelney.tscn"
+acts = Array[Resource]([SubResource("Resource_act1"), SubResource("Resource_act2"), SubResource("Resource_act3")])
+squad_library = Array[Resource]([ExtResource("6_thegn"), ExtResource("7_hearth"), ExtResource("8_spear"), ExtResource("9_bow"), ExtResource("10_cart"), ExtResource("11_bondi"), ExtResource("12_huscarl"), ExtResource("13_dbow"), ExtResource("14_berserkr"), ExtResource("15_jarl")])
+protected_units = Array[StringName]([&"sax_thegn_wulfstan"])
+critical_sectors = Array[StringName]([&"sector_minster"])
+critical_sector_grace_seconds = 75.0
+fail_if_all_squads_lost = true
+play_area = Rect2(0, 0, 2400, 1800)
+metres_per_pixel = 0.1
+par_time_seconds = 960.0
+wave_scalars = PackedFloat32Array(0.75, 1, 1.3)
+damage_scalars = PackedFloat32Array(0.85, 1, 1.15)
+reinforcement_scalars = PackedFloat32Array(0.85, 1, 1.2)

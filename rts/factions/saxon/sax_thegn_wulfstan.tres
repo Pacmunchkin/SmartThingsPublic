@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"sax_thegn_wulfstan"
+display_name = "Wulfstan, Thegn of Ēastburh"
+faction = 1
+role = 4
+model_count = 1
+health_per_model = 260.0
+armour = 0.45
+armour_pierce_vulnerability = 1.25
+move_speed = 32.0
+is_armoured = true
+is_wheeled = false
+melee_damage = 34.0
+melee_reach_px = 18.0
+melee_interval = 1.0
+missile_range_px = 0.0
+missile_damage = 0.0
+morale = 100.0
+suppression_rate = 0.0
+morale_recovery = 8.0
+rout_threshold = 0.0
+immune_to_suppression = true
+sight_radius_px = 620.0
+abilities = Array[StringName]([&"rally_the_wall", &"hold_fast"])
+flees_below_health = 0.0
+reinforce_cost = 0

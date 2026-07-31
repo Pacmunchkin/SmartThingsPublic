@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"dane_huscarl"
+display_name = "Húskarlar"
+faction = 2
+role = 1
+model_count = 6
+health_per_model = 140.0
+armour = 0.42
+armour_pierce_vulnerability = 1.3
+move_speed = 27.0
+is_armoured = true
+is_wheeled = false
+melee_damage = 29.0
+melee_reach_px = 20.0
+melee_interval = 1.4
+missile_range_px = 0.0
+missile_damage = 0.0
+morale = 92.0
+suppression_rate = 3.0
+morale_recovery = 6.0
+rout_threshold = 0.15
+immune_to_suppression = false
+sight_radius_px = 540.0
+abilities = Array[StringName]([&"dane_axe", &"armour_piercing", &"shieldwall"])
+reinforce_cost = 3

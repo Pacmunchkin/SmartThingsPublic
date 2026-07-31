@@ -1,0 +1,1655 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/cover_volume.gd" id="1_cover"]
+[ext_resource type="Script" path="res://scripts/terrain_region.gd" id="2_terrain"]
+[ext_resource type="Script" path="res://scripts/tactical_sector.gd" id="3_sector"]
+[ext_resource type="Script" path="res://scripts/spawn_marker.gd" id="4_spawn"]
+[ext_resource type="Script" path="res://scripts/trigger_volume.gd" id="5_trigger"]
+[ext_resource type="Script" path="res://scripts/mission_director.gd" id="6_director"]
+[ext_resource type="Resource" path="res://missions/m04_athelney/m04_mission.tres" id="7_mission"]
+
+[node name="CausewayAtAthelney" type="Node2D"]
+
+[node name="Terrain" type="Node2D" parent="."]
+
+[node name="RiverParret" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "RiverParret"
+terrain_priority = 8
+move_multiplier = 0.25
+passable_on_foot = false
+passable_when_armoured = false
+passable_by_wheeled = false
+concealment = 0
+sight_multiplier = 1
+elevation = 0
+hazard = 1
+morale_per_second = -2
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/RiverParret"]
+polygon = PackedVector2Array(940, 0, 920, 300, 880, 600, 800, 900, 700, 1120, 640, 1240, 800, 1300, 880, 1120, 940, 1000, 1010, 700, 1040, 350, 1060, 0)
+
+[node name="FordShallows" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "FordShallows"
+terrain_priority = 9
+move_multiplier = 0.45
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = false
+concealment = 0
+sight_multiplier = 1
+elevation = 0
+hazard = 1
+morale_per_second = -2.5
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/FordShallows"]
+polygon = PackedVector2Array(900, 300, 1060, 300, 1060, 420, 900, 420)
+
+[node name="MarshLevels" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "MarshLevels"
+terrain_priority = 1
+move_multiplier = 0.4
+passable_on_foot = true
+passable_when_armoured = false
+passable_by_wheeled = false
+concealment = 0.45
+sight_multiplier = 0.85
+elevation = 0
+hazard = 2
+morale_per_second = -1
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/MarshLevels"]
+polygon = PackedVector2Array(0, 940, 320, 1080, 620, 1260, 880, 1500, 980, 1760, 980, 1800, 0, 1800)
+
+[node name="TheCauseway" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "TheCauseway"
+terrain_priority = 10
+move_multiplier = 1.1
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0
+sight_multiplier = 1
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/TheCauseway"]
+polygon = PackedVector2Array(921, 1057, 959, 1103, 449, 1523, 411, 1477)
+
+[node name="MinsterRise" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "MinsterRise"
+terrain_priority = 5
+move_multiplier = 0.95
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = false
+concealment = 0
+sight_multiplier = 1.25
+elevation = 3
+hazard = 0
+morale_per_second = 1
+missile_range_multiplier = 1.15
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/MinsterRise"]
+polygon = PackedVector2Array(1090, 510, 1590, 510, 1590, 890, 1090, 890)
+
+[node name="VillageGround" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "VillageGround"
+terrain_priority = 2
+move_multiplier = 1
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0.05
+sight_multiplier = 1
+elevation = 2
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/VillageGround"]
+polygon = PackedVector2Array(1000, 860, 1720, 860, 1720, 1210, 1000, 1210)
+
+[node name="HeahwuduWood" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "HeahwuduWood"
+terrain_priority = 3
+move_multiplier = 0.7
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = false
+concealment = 0.55
+sight_multiplier = 0.6
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 0.9
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/HeahwuduWood"]
+polygon = PackedVector2Array(1380, 40, 2360, 40, 2360, 600, 1900, 660, 1500, 520, 1360, 300)
+
+[node name="PloughedFields" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "PloughedFields"
+terrain_priority = 2
+move_multiplier = 0.85
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0
+sight_multiplier = 1
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/PloughedFields"]
+polygon = PackedVector2Array(1000, 1210, 1440, 1210, 1440, 1500, 1000, 1500)
+
+[node name="DownlandEast" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "DownlandEast"
+terrain_priority = 2
+move_multiplier = 1
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0.05
+sight_multiplier = 1.1
+elevation = 2
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1.05
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/DownlandEast"]
+polygon = PackedVector2Array(1750, 640, 2400, 600, 2400, 1520, 1700, 1540)
+
+[node name="DroveRoad" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "DroveRoad"
+terrain_priority = 6
+move_multiplier = 1.15
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0
+sight_multiplier = 1
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/DroveRoad"]
+polygon = PackedVector2Array(1470, 1180, 1600, 1180, 1640, 1800, 1490, 1800)
+
+[node name="StaitheBeach" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "StaitheBeach"
+terrain_priority = 3
+move_multiplier = 0.9
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = false
+concealment = 0
+sight_multiplier = 1
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/StaitheBeach"]
+polygon = PackedVector2Array(1060, 60, 1420, 60, 1420, 250, 1060, 250)
+
+[node name="AthelneyBank" type="Area2D" parent="Terrain"]
+collision_layer = 1
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("2_terrain")
+region_name = "AthelneyBank"
+terrain_priority = 10
+move_multiplier = 0.95
+passable_on_foot = true
+passable_when_armoured = true
+passable_by_wheeled = true
+concealment = 0.1
+sight_multiplier = 1
+elevation = 1
+hazard = 0
+morale_per_second = 0
+missile_range_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Terrain/AthelneyBank"]
+polygon = PackedVector2Array(250, 1420, 500, 1420, 500, 1680, 250, 1680)
+
+[node name="Cover" type="Node2D" parent="."]
+
+[node name="Minster" type="Node2D" parent="Cover"]
+
+[node name="Village" type="Node2D" parent="Cover"]
+
+[node name="Hedges" type="Node2D" parent="Cover"]
+
+[node name="Earthworks" type="Node2D" parent="Cover"]
+
+[node name="Ford" type="Node2D" parent="Cover"]
+
+[node name="Staithe" type="Node2D" parent="Cover"]
+
+[node name="Marsh" type="Node2D" parent="Cover"]
+
+[node name="Woods" type="Node2D" parent="Cover"]
+
+[node name="Crossroads" type="Node2D" parent="Cover"]
+
+[node name="MinsterNave" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 180
+height_m = 6
+blocks_line_of_sight = true
+garrison_slots = 2
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/MinsterNave"]
+polygon = PackedVector2Array(1210, 590, 1400, 590, 1400, 700, 1210, 700)
+
+[node name="MinsterChancel" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 180
+height_m = 5
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/MinsterChancel"]
+polygon = PackedVector2Array(1400, 610, 1470, 610, 1470, 685, 1400, 685)
+
+[node name="MinsterTower" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 180
+height_m = 8
+blocks_line_of_sight = true
+garrison_slots = 1
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/MinsterTower"]
+polygon = PackedVector2Array(1155, 575, 1215, 575, 1215, 660, 1155, 660)
+
+[node name="ChurchyardWallN" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 270
+protected_arc_deg = 200
+height_m = 1.3
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 180
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/ChurchyardWallN"]
+polygon = PackedVector2Array(1120, 530, 1560, 530, 1560, 552, 1120, 552)
+
+[node name="ChurchyardWallE" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 0
+protected_arc_deg = 200
+height_m = 1.3
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 180
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/ChurchyardWallE"]
+polygon = PackedVector2Array(1538, 530, 1560, 530, 1560, 862, 1538, 862)
+
+[node name="ChurchyardWallSWest" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 90
+protected_arc_deg = 200
+height_m = 1.3
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 180
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/ChurchyardWallSWest"]
+polygon = PackedVector2Array(1120, 840, 1290, 840, 1290, 862, 1120, 862)
+
+[node name="ChurchyardWallSEast" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 90
+protected_arc_deg = 200
+height_m = 1.3
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 180
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/ChurchyardWallSEast"]
+polygon = PackedVector2Array(1370, 840, 1560, 840, 1560, 862, 1370, 862)
+
+[node name="ChurchyardWallW" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 180
+protected_arc_deg = 200
+height_m = 1.3
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 180
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/ChurchyardWallW"]
+polygon = PackedVector2Array(1120, 530, 1142, 530, 1142, 862, 1120, 862)
+
+[node name="PreachingCross" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 3.5
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/PreachingCross"]
+polygon = PackedVector2Array(1348.5, 797.7, 1337.7, 808.5, 1322.3, 808.5, 1311.5, 797.7, 1311.5, 782.3, 1322.3, 771.5, 1337.7, 771.5, 1348.5, 782.3)
+
+[node name="CharnelHouse" type="Area2D" parent="Cover/Minster"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 180
+height_m = 2.6
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Minster/CharnelHouse"]
+polygon = PackedVector2Array(1168, 718, 1240, 718, 1240, 782, 1168, 782)
+
+[node name="HutCeorl1" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl1"]
+polygon = PackedVector2Array(1050, 900, 1122, 900, 1122, 956, 1050, 956)
+
+[node name="HutCeorl2" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl2"]
+polygon = PackedVector2Array(1180, 876, 1252, 876, 1252, 932, 1180, 932)
+
+[node name="HutCeorl3" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl3"]
+polygon = PackedVector2Array(1310, 918, 1382, 918, 1382, 974, 1310, 974)
+
+[node name="HutCeorl4" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl4"]
+polygon = PackedVector2Array(1440, 888, 1512, 888, 1512, 944, 1440, 944)
+
+[node name="HutCeorl5" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl5"]
+polygon = PackedVector2Array(1090, 1018, 1162, 1018, 1162, 1074, 1090, 1074)
+
+[node name="HutCeorl6" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl6"]
+polygon = PackedVector2Array(1270, 1046, 1342, 1046, 1342, 1102, 1270, 1102)
+
+[node name="HutCeorl7" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.8
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 60
+flammable = true
+group_tag = &"village_thatch"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/HutCeorl7"]
+polygon = PackedVector2Array(1410, 1028, 1482, 1028, 1482, 1084, 1410, 1084)
+
+[node name="Smithy" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.6
+blocks_line_of_sight = true
+garrison_slots = 1
+destructible = true
+integrity = 140
+flammable = false
+group_tag = &"village_outbuilding"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/Smithy"]
+polygon = PackedVector2Array(1540, 958, 1636, 958, 1636, 1028, 1540, 1028)
+
+[node name="GrainBarn" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 3.2
+blocks_line_of_sight = true
+garrison_slots = 2
+destructible = true
+integrity = 90
+flammable = true
+group_tag = &"village_outbuilding"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/GrainBarn"]
+polygon = PackedVector2Array(1558, 1108, 1700, 1108, 1700, 1198, 1558, 1198)
+
+[node name="CattleByre" type="Area2D" parent="Cover/Village"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 70
+flammable = true
+group_tag = &"village_outbuilding"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Village/CattleByre"]
+polygon = PackedVector2Array(1180, 1136, 1300, 1136, 1300, 1198, 1180, 1198)
+
+[node name="HomeFieldHedgeN" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.2
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 120
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/HomeFieldHedgeN"]
+polygon = PackedVector2Array(1000, 1206, 1700, 1206, 1700, 1230, 1000, 1230)
+
+[node name="HomeFieldHedgeW" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.2
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 120
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/HomeFieldHedgeW"]
+polygon = PackedVector2Array(1000, 1206, 1024, 1206, 1024, 1470, 1000, 1470)
+
+[node name="DroveHedgeW" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.2
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 120
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/DroveHedgeW"]
+polygon = PackedVector2Array(1436, 1248, 1460, 1248, 1460, 1790, 1436, 1790)
+
+[node name="DroveHedgeE" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.2
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = true
+integrity = 120
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/DroveHedgeE"]
+polygon = PackedVector2Array(1610, 1300, 1634, 1300, 1634, 1790, 1610, 1790)
+
+[node name="FieldBankNE" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 270
+protected_arc_deg = 200
+height_m = 1.5
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/FieldBankNE"]
+polygon = PackedVector2Array(1760, 780, 2260, 780, 2260, 806, 1760, 806)
+
+[node name="FieldBankE" type="Area2D" parent="Cover/Hedges"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = true
+protected_facing_deg = 0
+protected_arc_deg = 200
+height_m = 1.5
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Hedges/FieldBankE"]
+polygon = PackedVector2Array(1900, 1000, 1924, 1000, 1924, 1400, 1900, 1400)
+
+[node name="CausewayBankNorth" type="Area2D" parent="Cover/Earthworks"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = true
+protected_facing_deg = 270
+protected_arc_deg = 190
+height_m = 1.8
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Earthworks/CausewayBankNorth"]
+polygon = PackedVector2Array(960, 1000, 1080, 1032, 1070, 1070, 950, 1038)
+
+[node name="BurhDitchEast" type="Area2D" parent="Cover/Earthworks"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = true
+protected_facing_deg = 0
+protected_arc_deg = 190
+height_m = 1.6
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Earthworks/BurhDitchEast"]
+polygon = PackedVector2Array(1704, 848, 1732, 848, 1732, 1202, 1704, 1202)
+
+[node name="BurhBankSouth" type="Area2D" parent="Cover/Earthworks"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = true
+protected_facing_deg = 90
+protected_arc_deg = 190
+height_m = 1.6
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Earthworks/BurhBankSouth"]
+polygon = PackedVector2Array(1200, 1466, 1440, 1466, 1440, 1494, 1200, 1494)
+
+[node name="FordStakes" type="Area2D" parent="Cover/Ford"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 1.2
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 80
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Ford/FordStakes"]
+polygon = PackedVector2Array(898, 316, 1062, 316, 1062, 336, 898, 336)
+
+[node name="WillowCoppice" type="Area2D" parent="Cover/Ford"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 4
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Ford/WillowCoppice"]
+polygon = PackedVector2Array(828, 248, 912, 248, 912, 332, 828, 332)
+
+[node name="WatchMound" type="Area2D" parent="Cover/Ford"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Ford/WatchMound"]
+polygon = PackedVector2Array(1154.5, 449.6, 1129.6, 474.5, 1094.4, 474.5, 1069.5, 449.6, 1069.5, 414.4, 1094.4, 389.5, 1129.6, 389.5, 1154.5, 414.4)
+
+[node name="LongshipHrafn" type="Area2D" parent="Cover/Staithe"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 2
+destructible = true
+integrity = 240
+flammable = true
+group_tag = &"longships"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Staithe/LongshipHrafn"]
+polygon = PackedVector2Array(1070, 90, 1174, 90, 1174, 140, 1070, 140)
+
+[node name="LongshipNaegling" type="Area2D" parent="Cover/Staithe"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 2
+destructible = true
+integrity = 240
+flammable = true
+group_tag = &"longships"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Staithe/LongshipNaegling"]
+polygon = PackedVector2Array(1180, 110, 1284, 110, 1284, 160, 1180, 160)
+
+[node name="LongshipSaebroga" type="Area2D" parent="Cover/Staithe"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 2
+destructible = true
+integrity = 240
+flammable = true
+group_tag = &"longships"
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Staithe/LongshipSaebroga"]
+polygon = PackedVector2Array(1290, 85, 1392, 85, 1392, 135, 1290, 135)
+
+[node name="BeachedTimbers" type="Area2D" parent="Cover/Staithe"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 1
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 0.9
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = true
+integrity = 70
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Staithe/BeachedTimbers"]
+polygon = PackedVector2Array(1090, 196, 1240, 196, 1240, 222, 1090, 222)
+
+[node name="ReedBedWest" type="Area2D" parent="Cover/Marsh"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 0
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Marsh/ReedBedWest"]
+polygon = PackedVector2Array(383.1, 1334.4, 334.4, 1383.1, 265.6, 1383.1, 216.9, 1334.4, 216.9, 1265.6, 265.6, 1216.9, 334.4, 1216.9, 383.1, 1265.6)
+
+[node name="ReedBedSouth" type="Area2D" parent="Cover/Marsh"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 0
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Marsh/ReedBedSouth"]
+polygon = PackedVector2Array(761.6, 1602.1, 702.1, 1661.6, 617.9, 1661.6, 558.4, 1602.1, 558.4, 1517.9, 617.9, 1458.4, 702.1, 1458.4, 761.6, 1517.9)
+
+[node name="ReedBedNorth" type="Area2D" parent="Cover/Marsh"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 0
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.4
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = true
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Marsh/ReedBedNorth"]
+polygon = PackedVector2Array(223.9, 1090.6, 180.6, 1133.9, 119.4, 1133.9, 76.1, 1090.6, 76.1, 1029.4, 119.4, 986.1, 180.6, 986.1, 223.9, 1029.4)
+
+[node name="OakStandNorth" type="Area2D" parent="Cover/Woods"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 9
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Woods/OakStandNorth"]
+polygon = PackedVector2Array(1657.3, 203.7, 1623.7, 237.3, 1576.3, 237.3, 1542.7, 203.7, 1542.7, 156.3, 1576.3, 122.7, 1623.7, 122.7, 1657.3, 156.3)
+
+[node name="OakStandEast" type="Area2D" parent="Cover/Woods"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 9
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Woods/OakStandEast"]
+polygon = PackedVector2Array(2068.4, 408.3, 2028.3, 448.4, 1971.7, 448.4, 1931.6, 408.3, 1931.6, 351.7, 1971.7, 311.6, 2028.3, 311.6, 2068.4, 351.7)
+
+[node name="OakStandSouth" type="Area2D" parent="Cover/Woods"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 2
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 9
+blocks_line_of_sight = true
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Woods/OakStandSouth"]
+polygon = PackedVector2Array(1839.9, 506.7, 1810.7, 535.9, 1769.3, 535.9, 1740.1, 506.7, 1740.1, 465.3, 1769.3, 436.1, 1810.7, 436.1, 1839.9, 465.3)
+
+[node name="StandingStone" type="Area2D" parent="Cover/Crossroads"]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("1_cover")
+cover_class = 3
+directional = false
+protected_facing_deg = 270
+protected_arc_deg = 360
+height_m = 2.6
+blocks_line_of_sight = false
+garrison_slots = 0
+destructible = false
+integrity = 100
+flammable = false
+group_tag = &""
+
+[node name="Shape" type="CollisionPolygon2D" parent="Cover/Crossroads/StandingStone"]
+polygon = PackedVector2Array(1170.3, 1278.4, 1158.4, 1290.3, 1141.6, 1290.3, 1129.7, 1278.4, 1129.7, 1261.6, 1141.6, 1249.7, 1158.4, 1249.7, 1170.3, 1261.6)
+
+[node name="Sectors" type="Node2D" parent="."]
+
+[node name="SectorFord" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_ford"
+display_name = "The Old Ford"
+owner_faction = 0
+capture_seconds = 18
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = false
+reinforcement_bonus = 0
+sight_bonus_px = 0
+local_missile_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorFord"]
+polygon = PackedVector2Array(830, 250, 1108, 250, 1108, 540, 830, 540)
+
+[node name="SectorMinster" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_minster"
+display_name = "Minster Yard"
+owner_faction = 1
+capture_seconds = 25
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = true
+reinforcement_bonus = 0.25
+sight_bonus_px = 260
+local_missile_multiplier = 1.15
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorMinster"]
+polygon = PackedVector2Array(1120, 490, 1540, 490, 1540, 870, 1120, 870)
+
+[node name="SectorVillage" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_village"
+display_name = "Ēastburh Green"
+owner_faction = 1
+capture_seconds = 20
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = false
+reinforcement_bonus = 0.5
+sight_bonus_px = 0
+local_missile_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorVillage"]
+polygon = PackedVector2Array(1110, 890, 1500, 890, 1500, 1190, 1110, 1190)
+
+[node name="SectorCauseway" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_causeway"
+display_name = "Causeway Head"
+owner_faction = 1
+capture_seconds = 22
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = false
+reinforcement_bonus = 0
+sight_bonus_px = 0
+local_missile_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorCauseway"]
+polygon = PackedVector2Array(840, 1000, 1100, 1000, 1100, 1240, 840, 1240)
+
+[node name="SectorStaithe" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_staithe"
+display_name = "The Staithe"
+owner_faction = 2
+capture_seconds = 28
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = false
+reinforcement_bonus = 0
+sight_bonus_px = 0
+local_missile_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorStaithe"]
+polygon = PackedVector2Array(1070, 60, 1400, 60, 1400, 236, 1070, 236)
+
+[node name="SectorDroveRoad" type="Area2D" parent="Sectors"]
+collision_layer = 4
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("3_sector")
+sector_id = &"sector_drove"
+display_name = "Drove Road Crossing"
+owner_faction = 1
+capture_seconds = 16
+decay_per_second = 1.0
+extra_squad_bonus = 0.25
+max_capture_speed = 2.0
+mission_critical = false
+reinforcement_bonus = 1
+sight_bonus_px = 0
+local_missile_multiplier = 1
+
+[node name="Shape" type="CollisionPolygon2D" parent="Sectors/SectorDroveRoad"]
+polygon = PackedVector2Array(1400, 1320, 1660, 1320, 1660, 1580, 1400, 1580)
+
+[node name="Triggers" type="Node2D" parent="."]
+
+[node name="TrgCartLoaded" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_cart_loaded"
+activating_faction = 1
+required_units = 1
+dwell_seconds = 1
+one_shot = true
+active_in_acts = Array[StringName]([&"act_1_crossing"])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgCartLoaded"]
+polygon = PackedVector2Array(1270, 1090, 1400, 1090, 1400, 1180, 1270, 1180)
+
+[node name="TrgCartCrossed" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_cart_crossed"
+activating_faction = 1
+required_units = 1
+dwell_seconds = 0.5
+one_shot = true
+active_in_acts = Array[StringName]([&"act_1_crossing"])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgCartCrossed"]
+polygon = PackedVector2Array(320, 1450, 470, 1450, 470, 1610, 320, 1610)
+
+[node name="TrgFordBreached" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_ford_breached"
+activating_faction = 2
+required_units = 1
+dwell_seconds = 2
+one_shot = true
+active_in_acts = Array[StringName]([])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgFordBreached"]
+polygon = PackedVector2Array(870, 440, 1130, 440, 1130, 560, 870, 560)
+
+[node name="TrgEastFlankSighted" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_east_flank_sighted"
+activating_faction = 2
+required_units = 2
+dwell_seconds = 2
+one_shot = true
+active_in_acts = Array[StringName]([&"act_2_shieldwall"])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgEastFlankSighted"]
+polygon = PackedVector2Array(1900, 860, 2160, 860, 2160, 1110, 1900, 1110)
+
+[node name="TrgMinsterThreatened" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_minster_threatened"
+activating_faction = 2
+required_units = 1
+dwell_seconds = 3
+one_shot = true
+active_in_acts = Array[StringName]([&"act_2_shieldwall"])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgMinsterThreatened"]
+polygon = PackedVector2Array(1142, 552, 1538, 552, 1538, 840, 1142, 840)
+
+[node name="TrgJarlAtStaithe" type="Area2D" parent="Triggers"]
+collision_layer = 8
+collision_mask = 48
+monitoring = true
+monitorable = true
+script = ExtResource("5_trigger")
+trigger_id = &"trg_jarl_at_staithe"
+activating_faction = 2
+required_units = 1
+dwell_seconds = 2
+one_shot = true
+active_in_acts = Array[StringName]([&"act_3_counterattack"])
+
+[node name="Shape" type="CollisionPolygon2D" parent="Triggers/TrgJarlAtStaithe"]
+polygon = PackedVector2Array(1080, 90, 1400, 90, 1400, 240, 1080, 240)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="P_Thegn" type="Marker2D" parent="Spawns"]
+position = Vector2(1332, 1150)
+script = ExtResource("4_spawn")
+spawn_id = &"P_Thegn"
+faction = 1
+squad_id = &"sax_thegn_wulfstan"
+arrival = 0
+stance = 1
+facing_deg = 270
+scatter_px = 0
+default_order_target = &"sector_causeway"
+group_tag = &"player_start"
+
+[node name="P_Hearthweru" type="Marker2D" parent="Spawns"]
+position = Vector2(1296, 1152)
+script = ExtResource("4_spawn")
+spawn_id = &"P_Hearthweru"
+faction = 1
+squad_id = &"sax_hearthweru"
+arrival = 0
+stance = 1
+facing_deg = 270
+scatter_px = 30
+default_order_target = &"sector_causeway"
+group_tag = &"player_start"
+
+[node name="P_FyrdSpear_A" type="Marker2D" parent="Spawns"]
+position = Vector2(1180, 1178)
+script = ExtResource("4_spawn")
+spawn_id = &"P_FyrdSpear_A"
+faction = 1
+squad_id = &"sax_fyrd_spear"
+arrival = 0
+stance = 1
+facing_deg = 270
+scatter_px = 40
+default_order_target = &"sector_causeway"
+group_tag = &"player_start"
+
+[node name="P_FyrdSpear_B" type="Marker2D" parent="Spawns"]
+position = Vector2(1424, 1168)
+script = ExtResource("4_spawn")
+spawn_id = &"P_FyrdSpear_B"
+faction = 1
+squad_id = &"sax_fyrd_spear"
+arrival = 0
+stance = 1
+facing_deg = 270
+scatter_px = 40
+default_order_target = &"sector_village"
+group_tag = &"player_start"
+
+[node name="P_FyrdBow" type="Marker2D" parent="Spawns"]
+position = Vector2(1306, 846)
+script = ExtResource("4_spawn")
+spawn_id = &"P_FyrdBow"
+faction = 1
+squad_id = &"sax_fyrd_bow"
+arrival = 0
+stance = 0
+facing_deg = 270
+scatter_px = 30
+default_order_target = &"sector_minster"
+group_tag = &"player_start"
+
+[node name="P_EscortCart" type="Marker2D" parent="Spawns"]
+position = Vector2(1330, 1122)
+script = ExtResource("4_spawn")
+spawn_id = &"P_EscortCart"
+faction = 1
+squad_id = &"obj_ox_cart"
+arrival = 0
+stance = 0
+facing_deg = 180
+scatter_px = 0
+default_order_target = &""
+group_tag = &"player_start"
+
+[node name="P_EvacGoal" type="Marker2D" parent="Spawns"]
+position = Vector2(390, 1520)
+script = ExtResource("4_spawn")
+spawn_id = &"P_EvacGoal"
+faction = 1
+squad_id = &""
+arrival = 0
+stance = 0
+facing_deg = 180
+scatter_px = 60
+default_order_target = &""
+group_tag = &""
+
+[node name="P_Reinforce_Drove" type="Marker2D" parent="Spawns"]
+position = Vector2(1528, 1782)
+script = ExtResource("4_spawn")
+spawn_id = &"P_Reinforce_Drove"
+faction = 1
+squad_id = &""
+arrival = 1
+stance = 2
+facing_deg = 270
+scatter_px = 45
+default_order_target = &"sector_village"
+group_tag = &"act2_reinforcement"
+
+[node name="P_Reinforce_Causeway" type="Marker2D" parent="Spawns"]
+position = Vector2(350, 1560)
+script = ExtResource("4_spawn")
+spawn_id = &"P_Reinforce_Causeway"
+faction = 1
+squad_id = &""
+arrival = 1
+stance = 2
+facing_deg = 45
+scatter_px = 50
+default_order_target = &"sector_village"
+group_tag = &"act3_reinforcement"
+
+[node name="D_Staithe_A" type="Marker2D" parent="Spawns"]
+position = Vector2(1120, 190)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Staithe_A"
+faction = 2
+squad_id = &""
+arrival = 2
+stance = 3
+facing_deg = 90
+scatter_px = 45
+default_order_target = &"sector_ford"
+group_tag = &"dane_landing"
+
+[node name="D_Staithe_B" type="Marker2D" parent="Spawns"]
+position = Vector2(1230, 205)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Staithe_B"
+faction = 2
+squad_id = &""
+arrival = 2
+stance = 3
+facing_deg = 90
+scatter_px = 45
+default_order_target = &"sector_minster"
+group_tag = &"dane_landing"
+
+[node name="D_Staithe_C" type="Marker2D" parent="Spawns"]
+position = Vector2(1340, 185)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Staithe_C"
+faction = 2
+squad_id = &""
+arrival = 2
+stance = 3
+facing_deg = 90
+scatter_px = 45
+default_order_target = &"sector_minster"
+group_tag = &"dane_landing"
+
+[node name="D_Jarl" type="Marker2D" parent="Spawns"]
+position = Vector2(1240, 240)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Jarl"
+faction = 2
+squad_id = &""
+arrival = 2
+stance = 3
+facing_deg = 90
+scatter_px = 25
+default_order_target = &"sector_minster"
+group_tag = &"dane_landing"
+
+[node name="D_FordProbe" type="Marker2D" parent="Spawns"]
+position = Vector2(1140, 300)
+script = ExtResource("4_spawn")
+spawn_id = &"D_FordProbe"
+faction = 2
+squad_id = &""
+arrival = 1
+stance = 3
+facing_deg = 90
+scatter_px = 35
+default_order_target = &"sector_ford"
+group_tag = &"dane_ford"
+
+[node name="D_Wood_N" type="Marker2D" parent="Spawns"]
+position = Vector2(1620, 124)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Wood_N"
+faction = 2
+squad_id = &""
+arrival = 1
+stance = 2
+facing_deg = 180
+scatter_px = 50
+default_order_target = &"sector_village"
+group_tag = &"dane_wood"
+
+[node name="D_Wood_E" type="Marker2D" parent="Spawns"]
+position = Vector2(2076, 342)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Wood_E"
+faction = 2
+squad_id = &""
+arrival = 1
+stance = 2
+facing_deg = 180
+scatter_px = 55
+default_order_target = &"sector_village"
+group_tag = &"dane_wood"
+
+[node name="D_Downland" type="Marker2D" parent="Spawns"]
+position = Vector2(2352, 1044)
+script = ExtResource("4_spawn")
+spawn_id = &"D_Downland"
+faction = 2
+squad_id = &""
+arrival = 1
+stance = 3
+facing_deg = 180
+scatter_px = 55
+default_order_target = &"sector_drove"
+group_tag = &"dane_downland"
+
+[node name="MissionDirector" type="Node" parent="."]
+script = ExtResource("6_director")
+mission = ExtResource("7_mission")
+difficulty = 1
+autostart = true

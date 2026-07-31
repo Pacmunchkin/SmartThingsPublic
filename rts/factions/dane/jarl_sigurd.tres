@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"jarl_sigurd"
+display_name = "Jarl Sigurð Ormsson"
+faction = 2
+role = 4
+model_count = 1
+health_per_model = 300.0
+armour = 0.48
+armour_pierce_vulnerability = 1.25
+move_speed = 33.0
+is_armoured = true
+is_wheeled = false
+melee_damage = 38.0
+melee_reach_px = 18.0
+melee_interval = 1.0
+missile_range_px = 0.0
+missile_damage = 0.0
+morale = 100.0
+suppression_rate = 0.0
+morale_recovery = 10.0
+rout_threshold = 0.0
+immune_to_suppression = true
+sight_radius_px = 640.0
+abilities = Array[StringName]([&"ormssons_wrath", &"rally_the_heathen_host"])
+flees_below_health = 0.40
+reinforce_cost = 0

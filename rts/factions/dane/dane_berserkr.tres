@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SquadArchetype" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/squad_archetype.gd" id="1_squad"]
+
+[resource]
+script = ExtResource("1_squad")
+squad_id = &"dane_berserkr"
+display_name = "Berserkir"
+faction = 2
+role = 3
+model_count = 4
+health_per_model = 165.0
+armour = 0.0
+armour_pierce_vulnerability = 1.0
+move_speed = 40.0
+is_armoured = false
+is_wheeled = false
+melee_damage = 42.0
+melee_reach_px = 15.0
+melee_interval = 0.9
+missile_range_px = 0.0
+missile_damage = 0.0
+morale = 100.0
+suppression_rate = 0.0
+morale_recovery = 0.0
+rout_threshold = 0.0
+immune_to_suppression = true
+sight_radius_px = 480.0
+abilities = Array[StringName]([&"unarmoured_frenzy", &"ignores_cover_bonus_in_melee"])
+reinforce_cost = 4

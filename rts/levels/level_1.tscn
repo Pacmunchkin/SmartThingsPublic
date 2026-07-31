@@ -1,0 +1,196 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://worldgen/level_root.gd" id="1_root"]
+[ext_resource type="Script" path="res://worldgen/brushes/forest_brush.gd" id="2_forest"]
+[ext_resource type="Script" path="res://worldgen/brushes/river_brush.gd" id="3_river"]
+[ext_resource type="Script" path="res://worldgen/brushes/scarp_brush.gd" id="4_scarp"]
+[ext_resource type="Script" path="res://worldgen/brushes/hill_brush.gd" id="5_hill"]
+[ext_resource type="Script" path="res://worldgen/brushes/clearing_brush.gd" id="6_clearing"]
+[ext_resource type="Script" path="res://worldgen/brushes/settlement_brush.gd" id="7_settlement"]
+[ext_resource type="Script" path="res://worldgen/brushes/road_brush.gd" id="8_road"]
+[ext_resource type="Script" path="res://worldgen/world_sampler.gd" id="9_sampler"]
+
+[sub_resource type="Curve2D" id="Curve2D_river"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 520, -60, 0, 0, 0, 0, 470, 320, 0, 0, 0, 0, 560, 700, 0, 0, 0, 0, 505, 1080, 0, 0, 0, 0, 585, 1450, 0, 0, 0, 0, 540, 1980)
+}
+point_count = 6
+
+[sub_resource type="Curve2D" id="Curve2D_scarp_west"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 210, -40, 0, 0, 0, 0, 175, 480, 0, 0, 0, 0, 250, 980, 0, 0, 0, 0, 195, 1500, 0, 0, 0, 0, 240, 1960)
+}
+point_count = 5
+
+[sub_resource type="Curve2D" id="Curve2D_scarp_east"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 850, 1960, 0, 0, 0, 0, 900, 1420, 0, 0, 0, 0, 820, 900, 0, 0, 0, 0, 880, 400, 0, 0, 0, 0, 845, -40)
+}
+point_count = 5
+
+[node name="Level1" type="Node2D"]
+script = ExtResource("1_root")
+map_size = Vector2i(1080, 1920)
+cell_size = 6
+level_seed = 1
+live_rebuild = true
+rebuild_delay = 0.35
+verbose = true
+
+[node name="Forest" type="Node2D" parent="."]
+script = ExtResource("2_forest")
+note = "the wildwood everything else is cut out of"
+spacing = 14.0
+glade_threshold = 0.16
+tree_scale = 1.0
+
+[node name="River" type="Node2D" parent="."]
+script = ExtResource("3_river")
+note = "drag the Path2D handles to move the water"
+source_width = 30.0
+mouth_width = 90.0
+width_curve = 0.75
+width_variation = 0.25
+place_fords = true
+ford_count = 2
+
+[node name="Path2D" type="Path2D" parent="River"]
+curve = SubResource("Curve2D_river")
+
+[node name="Hills" type="Node2D" parent="."]
+
+[node name="WestValleyWall" type="Node2D" parent="Hills"]
+script = ExtResource("4_scarp")
+note = "drawn N->S, so right-of-travel is west: the high side"
+height_left = 0.0
+height_right = 105.0
+run = 150.0
+influence = 700.0
+roughness = 22.0
+keep_clear_of_water = 150.0
+
+[node name="Path2D" type="Path2D" parent="Hills/WestValleyWall"]
+curve = SubResource("Curve2D_scarp_west")
+
+[node name="EastValleyWall" type="Node2D" parent="Hills"]
+script = ExtResource("4_scarp")
+note = "drawn S->N, so right-of-travel is east: the high side"
+height_left = 0.0
+height_right = 90.0
+run = 170.0
+influence = 700.0
+roughness = 18.0
+keep_clear_of_water = 150.0
+
+[node name="Path2D" type="Path2D" parent="Hills/EastValleyWall"]
+curve = SubResource("Curve2D_scarp_east")
+
+[node name="NorthKnoll" type="Node2D" parent="Hills"]
+script = ExtResource("5_hill")
+note = "commands the northern crossing"
+peak_height = 58.0
+falloff = 210.0
+falloff_shape = 1.3
+roughness = 26.0
+keep_clear_of_water = 140.0
+
+[node name="Polygon2D" type="Polygon2D" parent="Hills/NorthKnoll"]
+color = Color(0.6, 0.45, 0.3, 0.35)
+polygon = PackedVector2Array(700, 330, 830, 300, 890, 400, 850, 505, 720, 500)
+
+[node name="Clearings" type="Node2D" parent="."]
+
+[node name="RiversideMeadow" type="Node2D" parent="Clearings"]
+script = ExtResource("6_clearing")
+note = "open ground for a fight the wood would otherwise swallow"
+feather = 70.0
+mark_as_field = false
+
+[node name="Polygon2D" type="Polygon2D" parent="Clearings/RiversideMeadow"]
+color = Color(0.4, 0.7, 0.35, 0.3)
+polygon = PackedVector2Array(600, 1120, 760, 1150, 790, 1300, 660, 1360, 580, 1250)
+
+[node name="Settlements" type="Node2D" parent="."]
+
+[node name="Upperford" type="Node2D" parent="Settlements"]
+position = Vector2(640, 470)
+script = ExtResource("7_settlement")
+note = "on the northern narrows"
+settlement_name = "Upperford"
+radius = 92.0
+field_radius = 168.0
+level_ground = true
+is_capture_point = true
+owner_faction = 0
+
+[node name="Nethertun" type="Node2D" parent="Settlements"]
+position = Vector2(430, 1210)
+script = ExtResource("7_settlement")
+note = "west bank, below the meadow"
+settlement_name = "Nethertun"
+radius = 84.0
+field_radius = 156.0
+level_ground = true
+is_capture_point = true
+owner_faction = 0
+
+[node name="Stanwic" type="Node2D" parent="Settlements"]
+position = Vector2(700, 1650)
+script = ExtResource("7_settlement")
+note = "downstream, where the valley opens"
+settlement_name = "Stanwic"
+radius = 80.0
+field_radius = 150.0
+level_ground = true
+is_capture_point = true
+owner_faction = 0
+
+[node name="Roads" type="Node2D" parent="."]
+
+[node name="UpperfordToNethertun" type="Node2D" parent="Roads"]
+script = ExtResource("8_road")
+note = "solved: A* picks the crossing and the gentlest ground"
+mode = 0
+from_settlement = "Upperford"
+to_settlement = "Nethertun"
+to_map_edge = false
+half_width = 10.0
+verge = 20.0
+level_surface = true
+
+[node name="NethertunToStanwic" type="Node2D" parent="Roads"]
+script = ExtResource("8_road")
+note = "laid after the first, so it joins and shares a stretch of it"
+mode = 0
+from_settlement = "Nethertun"
+to_settlement = "Stanwic"
+to_map_edge = false
+half_width = 10.0
+verge = 20.0
+level_surface = true
+
+[node name="WayOutOfTheValley" type="Node2D" parent="Roads"]
+script = ExtResource("8_road")
+note = "without an approach the map reads as a closed pocket"
+mode = 0
+from_settlement = "Stanwic"
+to_map_edge = true
+half_width = 9.0
+verge = 18.0
+level_surface = true
+
+[node name="Terrain" type="ColorRect" parent="."]
+offset_right = 1080.0
+offset_bottom = 1920.0
+mouse_filter = 2
+
+[node name="Trees" type="MultiMeshInstance2D" parent="."]
+
+[node name="Sectors" type="Node2D" parent="."]
+
+[node name="WorldSampler" type="Node" parent="."]
+script = ExtResource("9_sampler")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(540, 960)
+zoom = Vector2(0.55, 0.55)
