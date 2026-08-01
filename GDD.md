@@ -138,6 +138,11 @@ reserved for abilities. ✅
     draws battlement / archer fire and lets other units slip past.
   - Arrows carry their **shooter** (for retaliation) and a **max travel**
     distance (no map-crossing shots).
+  - **Knockback on ranged hits:** arrows and spear-throws shove the target
+    back a touch (`UnitType.ranged_knockback`), reduced by the target's
+    `knockback_resist` — slows the melee rush on a bow line without ever
+    perma-peeling it (heavies resist; see §15.7). Melee hits carry no
+    knockback (only the Shield Bash / Push Back / Knockback abilities do).
 
 ### 6.3 Unit Types ✅ (resource-driven — `UnitType.tres`)
 
@@ -936,6 +941,32 @@ Axe retinue (6).
 - **Bows & Seax test too weak** (no kiting/screening) — their caps (9 / 12)
   pre-compensate; expect them to shine once positioning is real.
 - **Spear sits on a knife-edge at cap 5** — first thing to watch/tune.
+
+### 15.7 Knockback on damage (ranged only)
+Arrows and spear-throws **shove the target back a little on hit** — the point is
+to *slow the melee rush* on the bows, buying the archers extra volleys, not to
+peel-lock the attacker forever. Melee hits carry **no** knockback (only the
+signature *Shield Bash / Push Back / Knockback* abilities do).
+
+- **New `UnitType` fields:** **`ranged_knockback`** (px of setback per hit, `0`
+  = none) and **`knockback_resist`** (`0–1`, fraction of incoming shove
+  ignored). Heavies (**Axe, Shield Wall**) get high resist — they are the
+  built-in counter to a bow line trying to kite them.
+- **Starting magnitudes:** **Bows ≈ 20–30 px** setback/hit, **Spear ≈ 40–50 px**
+  (heavier throw, but slower fire rate). Resist: Axe / Shield Wall **≈ 0.6–0.8**,
+  Sword & Shield **≈ 0.3**, light **0**.
+- **Reuses the existing `apply_knockback(dir, speed)` primitive** (decaying
+  shove, `KNOCKBACK_DECAY = 800`). Setback distance ≈ `speed² / (2 × decay)`, so
+  bows fire at **speed ≈ 200**, spears at **≈ 270**. Applied at the ranged hit,
+  scaled by `(1 − target.knockback_resist)`. Optional per-target knockback
+  cooldown (~0.3 s) if stacked hits jitter a unit.
+- **Sim finding (why the magnitudes are safe):** across 0→150 px setback/hit,
+  under both *nearest* and *spread* bow targeting, **12 Seax still break through
+  9 Bows 100% of the time** — nearest-targeting fixates on the bounced
+  front-runner while the pack keeps advancing, so there is **no perma-peel
+  lock**. Knockback slows the rush; it never stops it.
+- **Scope:** v0.2 polish — the numbers are cheap to add once the ranged hit path
+  and `apply_knockback` are in.
 
 ---
 
